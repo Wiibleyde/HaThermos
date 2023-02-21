@@ -18,11 +18,19 @@
             </div>
             <div class="flex flex-col items-center justify-center mt-52">
                 <p class="text-2xl font-bold">Login</p>
-                <form action="/login" method="POST" class="flex flex-col items-center justify-center mt-4">
-                    <input type="text" name="username" placeholder="Username" class="mb-2" id="username" required>
-                    <input type="password" name="password" placeholder="Password" class="mb-2" id="password" required>
-                    <input type="submit" value="Login" class="mb-2">
-                </form>
+                {% block content %}
+                    <div class="flex flex-col items-center justify-center mt-4 dark:text-black">
+                        <div class="mb-2">
+                            {{ form.username }}
+                        </div>
+                        <div class="mb-2">
+                            {{ form.password }}
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center justify-center mt-4">
+                        {{ form.submit }}
+                    </div>
+                {% endblock %}
             </div>
         </div>
     </body>

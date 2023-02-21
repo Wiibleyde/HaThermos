@@ -1,7 +1,7 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask import Flask, render_template, redirect, url_for, flash
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectMultipleField, SelectField, BooleanField, SubmitField, PasswordField, IntegerField, FloatField, TextAreaField, RadioField, SelectMultipleField, widgets, SelectField, HiddenField, FileField, FormField, FieldList, Form, validators
+from wtforms import StringField, SelectField, SelectField, SubmitField
 from wtforms.validators import DataRequired
 import json
 import os
@@ -10,7 +10,7 @@ import hashlib
 # ==============================================================================
 # Environment variables 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'neledispas'
+app.config['SECRET_KEY'] = 'secret'
 login_manager=LoginManager()
 login_manager.init_app(app)
 # ==============================================================================
@@ -80,7 +80,7 @@ class AccountsStorer:
                 return True
             else:
                 return False
-            
+
 class Server:
     def __init__(self, serverName, serverVersion):
         self.serverName = serverName
@@ -140,7 +140,7 @@ class Server:
                 return True
             else:
                 return False
-            
+
 class ServerConfig:
     def __init__(self, serverName, serverVersion):
         self.serverName = serverName
@@ -224,8 +224,9 @@ class Config:
         return self.config[key]
 
 class LoginForm(FlaskForm):
-    username = StringField('username', validators=[DataRequired()])
-    password = StringField('password', validators=[DataRequired()])
+    username = StringField('username', validators=[DataRequired()], render_kw={"placeholder": "Username"})
+    password = StringField('password', validators=[DataRequired()], render_kw={"placeholder": "Password"})
+    submit = SubmitField('Login')
 
 class RegisterForm(FlaskForm):
     username = StringField('username', validators=[DataRequired()])
@@ -248,6 +249,7 @@ class ModifyServer(FlaskForm):
     serverName = StringField('serverName', validators=[DataRequired()])
     serverVersion = SelectField('serverVersion', choices=[('1.8.8', '1.8.8'), ('1.9.4', '1.9.4'), ('1.10.2', '1.10.2'), ('1.11.2', '1.11.2'), ('1.12.2', '1.12.2'), ('1.13.2', '1.13.2'), ('1.14.4', '1.14.4'), ('1.15.2', '1.15.2'), ('1.16.5', '1.16.5'), ('1.17.1', '1.17.1'), ('1.18.2', '1.18.2'), ('1.19.3','1.19.3')], validators=[DataRequired()])
     serverGamemode = SelectField('serverGamemode', choices=[('survival', 'survival'), ('creative', 'creative'), ('adventure', 'adventure'), ('spectator', 'spectator')], validators=[DataRequired()])
+    serverDifficulty = SelectField('serverDifficulty', choices=[('peaceful', 'peaceful'), ('easy', 'easy'), ('normal', 'normal'), ('hard', 'hard')], validators=[DataRequired()])
 
 class DeleteServer(FlaskForm):
     serverName = StringField('serverName', validators=[DataRequired()])
@@ -268,17 +270,15 @@ def index():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        print("Validating login")
         if jsonAccounts.checkAccount(form.username.data, form.password.data):
-            print("Login successful")
-            login_user(User(form.username.data))
-            return redirect(url_for('index'))
+            user = User(form.username.data)
+            login_user(user)
+            return redirect(url_for('dashboard'))
         else:
-            print("Login failed")
             flash('Invalid username or password')
             return redirect(url_for('login'))
     else:
-        print("Login form not valid")
+        print(form.errors)
     return render_template('login.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'))
 
 @app.route('/logout')
