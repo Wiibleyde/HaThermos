@@ -134,3 +134,6 @@ dockerFolder/*
 
 # nodes modules
 node_modules/
+
+# accounts 
+accounts.json
