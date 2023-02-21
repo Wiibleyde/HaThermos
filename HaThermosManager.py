@@ -262,18 +262,23 @@ def ErrorHandler(e):
 
 @app.route('/')
 def index():
-    return render_template("index.html", ProjectName=jsonConfig.getConfig('ProjectName'))
+    return render_template("index.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Home", PageNameLower="home")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
+        print("Validating login")
         if jsonAccounts.checkAccount(form.username.data, form.password.data):
+            print("Login successful")
             login_user(User(form.username.data))
             return redirect(url_for('index'))
         else:
+            print("Login failed")
             flash('Invalid username or password')
             return redirect(url_for('login'))
+    else:
+        print("Login form not valid")
     return render_template('login.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'))
 
 @app.route('/logout')
@@ -317,6 +322,7 @@ def modifyAccount():
 
 if __name__ == '__main__':
     jsonAccounts = AccountsStorer()
+    jsonAccounts.addAccount('admin', 'admin')
     jsonConfig = Config()
     createApp()
     app.register_error_handler(404, ErrorHandler)
