@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, flash
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, SelectField, SubmitField, PasswordField
+from wtforms import StringField, SelectField, SelectField, SubmitField, PasswordField, BooleanField, IntegerField
 from wtforms.validators import DataRequired
 import json
 import os
@@ -18,10 +18,15 @@ login_manager.init_app(app)
 class User(UserMixin):
     def __init__(self, username):
         self.id = username
+        self.username = username
 
 @login_manager.user_loader
 def load_user(user_id):
     return User(user_id)
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    return redirect(url_for('login'))
 
 class AccountsStorer:
     def __init__(self):
@@ -82,110 +87,84 @@ class AccountsStorer:
                 return False
 
 class Server:
-    def __init__(self, serverName, serverVersion):
-        self.serverName = serverName
-        self.serverVersion = serverVersion
-        self.fileName = 'serverUsers.json'
+    def __init__(self, fileName):
+        self.fileName = fileName
         if not os.path.exists(self.fileName):
-            self.serverUsers = {}
+            self.server = {}
             self.createFile()
+        else:
+            self.loadFile()
 
     def createFile(self):
         with open(self.fileName, 'w') as f:
-            json.dump(self.serverUsers, f)
+            json.dump(self.server, f)
 
-    def addServerUser(self, username, password):
-        with open(self.fileName, 'r+') as f:
-            self.serverUsers = json.load(f)
-            if username in self.serverUsers:
-                return False
-            else:
-                encodedPassword = hashlib.sha256(password.encode('utf-8')).hexdigest()
-                self.serverUsers[username] = encodedPassword
-                f.seek(0)
-                json.dump(self.serverUsers, f)
-                return True
-            
-    def checkServerUser(self, username, password):
+    def loadFile(self):
         with open(self.fileName, 'r') as f:
-            self.serverUsers = json.load(f)
-            if username in self.serverUsers:
-                encodedPassword = hashlib.sha256(password.encode('utf-8')).hexdigest()
-                if self.serverUsers[username] == encodedPassword:
-                    return True
-                else:
-                    return False
-            else:
-                return False
-            
-    def deleteServerUser(self, username):
-        with open(self.fileName, 'r+') as f:
-            self.serverUsers = json.load(f)
-            if username in self.serverUsers:
-                del self.serverUsers[username]
-                f.seek(0)
-                json.dump(self.serverUsers, f)
-                return True
-            else:
-                return False
-            
-    def modifyServerUser(self, username, password):
-        with open(self.fileName, 'r+') as f:
-            self.serverUsers = json.load(f)
-            if username in self.serverUsers:
-                encodedPassword = hashlib.sha256(password.encode('utf-8')).hexdigest()
-                self.serverUsers[username] = encodedPassword
-                f.seek(0)
-                json.dump(self.serverUsers, f)
-                return True
-            else:
-                return False
+            self.server = json.load(f)
 
-class ServerConfig:
-    def __init__(self, serverName, serverVersion):
-        self.serverName = serverName
-        self.serverVersion = serverVersion
-        self.fileName = 'serverConfig.json'
-        if not os.path.exists(self.fileName):
-            self.config = {}
-            self.createFile()
-
-    def createFile(self):
-        with open(self.fileName, 'w') as f:
-            json.dump(self.config, f)
-
-    def addConfig(self, key, value):
+    def addServer(self, serverName, username):
         with open(self.fileName, 'r+') as f:
-            self.config = json.load(f)
-            if key in self.config:
+            self.server = json.load(f)
+            if serverName in self.server:
                 return False
             else:
-                self.config[key] = value
+                self.server[serverName] = username
                 f.seek(0)
-                json.dump(self.config, f)
+                json.dump(self.server, f)
                 return True
             
-    def deleteConfig(self, key):
+    def deleteServer(self, serverName):
         with open(self.fileName, 'r+') as f:
-            self.config = json.load(f)
-            if key in self.config:
-                del self.config[key]
+            self.server = json.load(f)
+            if serverName in self.server:
+                del self.server[serverName]
                 f.seek(0)
-                json.dump(self.config, f)
+                json.dump(self.server, f)
                 return True
             else:
                 return False
             
-    def modifyConfig(self, key, value):
+    def modifyServer(self, serverName, username):
         with open(self.fileName, 'r+') as f:
-            self.config = json.load(f)
-            if key in self.config:
-                self.config[key] = value
+            self.server = json.load(f)
+            if serverName in self.server:
+                self.server[serverName] = username
                 f.seek(0)
-                json.dump(self.config, f)
+                json.dump(self.server, f)
                 return True
             else:
                 return False
+            
+    def checkServer(self, serverName):
+        with open(self.fileName, 'r') as f:
+            self.server = json.load(f)
+            if serverName in self.server:
+                return True
+            else:
+                return False
+            
+    def getServer(self, serverName):
+        with open(self.fileName, 'r') as f:
+            self.server = json.load(f)
+            if serverName in self.server:
+                return self.server[serverName]
+            else:
+                return False
+            
+    def getServerList(self):
+        with open(self.fileName, 'r') as f:
+            self.server = json.load(f)
+            return list(self.server.keys())
+        
+    def getServerListByUser(self, username):
+        with open(self.fileName, 'r') as f:
+            self.server = json.load(f)
+            serverList = []
+            for server in self.server:
+                if self.server[server] == username:
+                    serverList.append(server)
+            return serverList
 
 class Config:
     def __init__(self):
@@ -224,35 +203,44 @@ class Config:
         return self.config[key]
 
 class LoginForm(FlaskForm):
-    username = StringField('username', validators=[DataRequired()], render_kw={"placeholder": "Username"})
-    password = StringField('password', validators=[DataRequired()], render_kw={"placeholder": "Password", "type": "password"})
-    submit = SubmitField('submit', render_kw={"value": "Login"})
+    username = StringField('username', validators=[DataRequired()], render_kw={"placeholder": "Username", "class": "text-black"})
+    password = StringField('password', validators=[DataRequired()], render_kw={"placeholder": "Password", "type": "password", "class": "text-black"})
+    submit = SubmitField('submit', render_kw={"value": "Login", "class": "text-white"})
 
 class RegisterForm(FlaskForm):
-    username = StringField('username', validators=[DataRequired()])
-    password = StringField('password', validators=[DataRequired()])
+    username = StringField('username', validators=[DataRequired()], render_kw={"placeholder": "Username", "class": "text-black"})
+    password = StringField('password', validators=[DataRequired()], render_kw={"placeholder": "Password", "type": "password", "class": "text-black"})
+    submit = SubmitField('submit', render_kw={"value": "Register", "class": "text-white"})
 
 class DeleteAccountForm(FlaskForm):
     username = StringField('username', validators=[DataRequired()])
     password = StringField('password', validators=[DataRequired()])
+    submit = SubmitField('submit', render_kw={"value": "Delete"})
 
 class ModifyAccountForm(FlaskForm):
     username = StringField('username', validators=[DataRequired()])
     password = StringField('password', validators=[DataRequired()])
     newPassword = StringField('newPassword', validators=[DataRequired()])
+    submit = SubmitField('submit', render_kw={"value": "Modify"})
 
 class CreateServer(FlaskForm):
     serverName = StringField('serverName', validators=[DataRequired()])
     serverVersion = SelectField('serverVersion', choices=[('1.8.8', '1.8.8'), ('1.9.4', '1.9.4'), ('1.10.2', '1.10.2'), ('1.11.2', '1.11.2'), ('1.12.2', '1.12.2'), ('1.13.2', '1.13.2'), ('1.14.4', '1.14.4'), ('1.15.2', '1.15.2'), ('1.16.5', '1.16.5'), ('1.17.1', '1.17.1'), ('1.18.2', '1.18.2'), ('1.19.3','1.19.3')], validators=[DataRequired()])
+    submit = SubmitField('submit', render_kw={"value": "Create"})
 
 class ModifyServer(FlaskForm):
     serverName = StringField('serverName', validators=[DataRequired()])
     serverVersion = SelectField('serverVersion', choices=[('1.8.8', '1.8.8'), ('1.9.4', '1.9.4'), ('1.10.2', '1.10.2'), ('1.11.2', '1.11.2'), ('1.12.2', '1.12.2'), ('1.13.2', '1.13.2'), ('1.14.4', '1.14.4'), ('1.15.2', '1.15.2'), ('1.16.5', '1.16.5'), ('1.17.1', '1.17.1'), ('1.18.2', '1.18.2'), ('1.19.3','1.19.3')], validators=[DataRequired()])
     serverGamemode = SelectField('serverGamemode', choices=[('survival', 'survival'), ('creative', 'creative'), ('adventure', 'adventure'), ('spectator', 'spectator')], validators=[DataRequired()])
     serverDifficulty = SelectField('serverDifficulty', choices=[('peaceful', 'peaceful'), ('easy', 'easy'), ('normal', 'normal'), ('hard', 'hard')], validators=[DataRequired()])
+    serverPVP = SelectField('serverPVP', choices=[('true', 'true'), ('false', 'false')], validators=[DataRequired()])
+    serverWhitelist = SelectField('serverWhitelist', choices=[('true', 'true'), ('false', 'false')], validators=[DataRequired()])
+    serverMaxPlayers = IntegerField('serverMaxPlayers', validators=[DataRequired()])
+    submit = SubmitField('submit', render_kw={"value": "Modify"})
 
 class DeleteServer(FlaskForm):
     serverName = StringField('serverName', validators=[DataRequired()])
+    submit = SubmitField('submit', render_kw={"value": "Delete"})
 
 def createApp():
     app = Flask(__name__)
@@ -270,11 +258,14 @@ def index():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
+        print("form validated")
         if jsonAccounts.checkAccount(form.username.data, form.password.data):
+            print("account exists")
             user = User(form.username.data)
             login_user(user)
             return redirect(url_for('dashboard'))
         else:
+            print("account does not exist")
             flash('Invalid username or password')
             return redirect(url_for('login'))
     else:
@@ -299,6 +290,7 @@ def register():
     return render_template('register.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'))
 
 @app.route('/deleteAccount', methods=['GET', 'POST'])
+@login_required
 def deleteAccount():
     form = DeleteAccountForm()
     if form.validate_on_submit():
@@ -310,6 +302,7 @@ def deleteAccount():
     return render_template('deleteAccount.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'))
 
 @app.route('/modifyAccount', methods=['GET', 'POST'])
+@login_required
 def modifyAccount():
     form = ModifyAccountForm()
     if form.validate_on_submit():
@@ -320,10 +313,20 @@ def modifyAccount():
             return redirect(url_for('modifyAccount'))
     return render_template('modifyAccount.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'))
 
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    loggedUser = current_user
+    print(loggedUser.username)
+    print(jsonServers.getServerListByUser(loggedUser.username))
+    return render_template('dashboard.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Dashboard", PageNameLower="dashboard", servers=jsonServers.getServerListByUser(loggedUser.username))
+
 if __name__ == '__main__':
     jsonAccounts = AccountsStorer()
     jsonAccounts.addAccount('admin', 'admin')
     jsonConfig = Config()
+    jsonServers = Server("servers.json")
+    jsonServers.addServer("test", "nathan")
     createApp()
     app.register_error_handler(404, ErrorHandler)
     app.run(port=5000)

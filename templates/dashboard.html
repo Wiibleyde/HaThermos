@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="icon" href="/static/assets/HaThermos.ico">
+        <link rel="stylesheet" href="/static/css/tailwind.css">
+        <title>{{ ProjectName }} - {{ PageName }}</title>
+    </head>
+    <header>
+        {% include "fragments/navbar.html" %}
+    </header>
+    <body class="dark:bg-black dark:text-white">
+        <div class="container mx-auto">
+            <div class="flex flex-col items-center justify-center">
+                <h1 class="text-4xl font-bold">Your servers</h1>
+            </div>
+            <div class="flex flex-col items-center justify-center mt-52">
+                {% for server in servers %}
+                <div class="flex flex-col items-center justify-center">
+                    <p class="text-2xl font-bold">{{ server }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </body>
+    <footer>
+        {% include "fragments/footer.html" %}
+    </footer>
+</html>
