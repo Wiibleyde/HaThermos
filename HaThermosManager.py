@@ -6,6 +6,8 @@ from wtforms.validators import DataRequired
 import json
 import os
 import hashlib
+from subprocess import run
+import time
 
 # ==============================================================================
 # Environment variables 
@@ -30,10 +32,14 @@ def unauthorized():
 
 class AccountsStorer:
     def __init__(self):
+        print('AccountsStorer : init', end='\r')
         self.fileName = 'accounts.json'
         if not os.path.exists(self.fileName):
+            print('AccountsStorer : createFile', end='\r')
             self.accounts = {}
             self.createFile()
+        print('AccountsStorer : loadFile', end='\r')
+        print('AccountsStorer : init done')
 
     def createFile(self):
         with open('accounts.json', 'w') as f:
@@ -88,12 +94,16 @@ class AccountsStorer:
 
 class Server:
     def __init__(self, fileName):
+        print('Server : init', end='\r')
         self.fileName = fileName
         if not os.path.exists(self.fileName):
+            print('Server : createFile', end='\r')
             self.server = {}
             self.createFile()
         else:
+            print('Server : loadFile', end='\r')
             self.loadFile()
+        print('Server : init done')
 
     def createFile(self):
         with open(self.fileName, 'w') as f:
@@ -242,8 +252,26 @@ class DeleteServer(FlaskForm):
     serverName = StringField('serverName', validators=[DataRequired()])
     submit = SubmitField('submit', render_kw={"value": "Delete"})
 
+def buildCss():
+    print("Building CSS : downloading", end="\r")
+    run(["npm", "install", "-D", "tailwindcss"])
+    print("Building CSS : downloading... Done")
+    print("Building CSS : building", end="\r")
+    run(["npx", "tailwindcss", "-i", "./static/css/input.css", "-o", "./static/css/tailwind.css"])
+    time.sleep(1)
+    if os.path.exists("./static/css/tailwind.css"):
+        print("Building CSS : building... Done")
+        time.sleep(1)
+        return True
+    else:
+        print("Building CSS : building... Failed")
+        time.sleep(1)
+        return False
+
 def createApp():
+    print("Creating app...", end="\r")
     app = Flask(__name__)
+    print("Creating app... Done")
     return app
 
 def ErrorHandler(e):
@@ -327,6 +355,7 @@ if __name__ == '__main__':
     jsonConfig = Config()
     jsonServers = Server("servers.json")
     jsonServers.addServer("test", "nathan")
+    # buildCss()
     createApp()
     app.register_error_handler(404, ErrorHandler)
     app.run(port=5000)
