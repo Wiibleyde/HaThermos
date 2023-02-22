@@ -9,5 +9,5 @@ npx tailwindcss init
 
 
 ```bash
-npx tailwindcss -i ./static/input.css -o ./static/tailwind.css --watch
+npx tailwindcss -i ./static/css/input.css -o ./static/css/tailwind.css --watch
 ```
