@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, flash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, SelectField, SubmitField
+from wtforms import StringField, SelectField, SelectField, SubmitField, PasswordField
 from wtforms.validators import DataRequired
 import json
 import os
@@ -225,8 +225,8 @@ class Config:
 
 class LoginForm(FlaskForm):
     username = StringField('username', validators=[DataRequired()], render_kw={"placeholder": "Username"})
-    password = StringField('password', validators=[DataRequired()], render_kw={"placeholder": "Password"})
-    submit = SubmitField('Login')
+    password = StringField('password', validators=[DataRequired()], render_kw={"placeholder": "Password", "type": "password"})
+    submit = SubmitField('submit', render_kw={"value": "Login"})
 
 class RegisterForm(FlaskForm):
     username = StringField('username', validators=[DataRequired()])
@@ -326,4 +326,4 @@ if __name__ == '__main__':
     jsonConfig = Config()
     createApp()
     app.register_error_handler(404, ErrorHandler)
-    app.run(host='0.0.0.0', port=80, debug=True)
+    app.run(port=5000)
