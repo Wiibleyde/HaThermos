@@ -233,12 +233,12 @@ class ModifyAccountForm(FlaskForm):
     newPassword = StringField('newPassword', validators=[DataRequired()])
     submit = SubmitField('submit', render_kw={"value": "Modify"})
 
-class CreateServer(FlaskForm):
+class CreateServerForm(FlaskForm):
     serverName = StringField('serverName', validators=[DataRequired()])
     serverVersion = SelectField('serverVersion', choices=[('1.8.8', '1.8.8'), ('1.9.4', '1.9.4'), ('1.10.2', '1.10.2'), ('1.11.2', '1.11.2'), ('1.12.2', '1.12.2'), ('1.13.2', '1.13.2'), ('1.14.4', '1.14.4'), ('1.15.2', '1.15.2'), ('1.16.5', '1.16.5'), ('1.17.1', '1.17.1'), ('1.18.2', '1.18.2'), ('1.19.3','1.19.3')], validators=[DataRequired()])
     submit = SubmitField('submit', render_kw={"value": "Create"})
 
-class ModifyServer(FlaskForm):
+class ModifyServerForm(FlaskForm):
     serverName = StringField('serverName', validators=[DataRequired()])
     serverVersion = SelectField('serverVersion', choices=[('1.8.8', '1.8.8'), ('1.9.4', '1.9.4'), ('1.10.2', '1.10.2'), ('1.11.2', '1.11.2'), ('1.12.2', '1.12.2'), ('1.13.2', '1.13.2'), ('1.14.4', '1.14.4'), ('1.15.2', '1.15.2'), ('1.16.5', '1.16.5'), ('1.17.1', '1.17.1'), ('1.18.2', '1.18.2'), ('1.19.3','1.19.3')], validators=[DataRequired()])
     serverGamemode = SelectField('serverGamemode', choices=[('survival', 'survival'), ('creative', 'creative'), ('adventure', 'adventure'), ('spectator', 'spectator')], validators=[DataRequired()])
@@ -248,7 +248,7 @@ class ModifyServer(FlaskForm):
     serverMaxPlayers = IntegerField('serverMaxPlayers', validators=[DataRequired()])
     submit = SubmitField('submit', render_kw={"value": "Modify"})
 
-class DeleteServer(FlaskForm):
+class DeleteServerForm(FlaskForm):
     serverName = StringField('serverName', validators=[DataRequired()])
     submit = SubmitField('submit', render_kw={"value": "Delete"})
 
@@ -298,7 +298,7 @@ def login():
             return redirect(url_for('login'))
     else:
         print(form.errors)
-    return render_template('login.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'))
+    return render_template('login.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Login", PageNameLower="login")
 
 @app.route('/logout')
 @login_required
@@ -311,11 +311,12 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         if jsonAccounts.addAccount(form.username.data, form.password.data):
+            flash('Account created', category='success')
             return redirect(url_for('login'))
         else:
-            flash('Username already exists')
+            flash('Username already exists', category='error')
             return redirect(url_for('register'))
-    return render_template('register.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'))
+    return render_template('register.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Register", PageNameLower="register")
 
 @app.route('/deleteAccount', methods=['GET', 'POST'])
 @login_required
@@ -327,7 +328,7 @@ def deleteAccount():
         else:
             flash('Invalid username or password')
             return redirect(url_for('deleteAccount'))
-    return render_template('deleteAccount.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'))
+    return render_template('deleteAccount.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Delete Account", PageNameLower="deleteaccount")
 
 @app.route('/modifyAccount', methods=['GET', 'POST'])
 @login_required
@@ -339,7 +340,7 @@ def modifyAccount():
         else:
             flash('Invalid username or password')
             return redirect(url_for('modifyAccount'))
-    return render_template('modifyAccount.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'))
+    return render_template('modifyAccount.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Modify Account", PageNameLower="modifyaccount")
 
 @app.route('/dashboard')
 @login_required
@@ -347,7 +348,19 @@ def dashboard():
     loggedUser = current_user
     print(loggedUser.username)
     print(jsonServers.getServerListByUser(loggedUser.username))
-    return render_template('dashboard.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Dashboard", PageNameLower="dashboard", servers=jsonServers.getServerListByUser(loggedUser.username))
+    return render_template('dashboard.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Dashboard", PageNameLower="dashboard", servers=jsonServers.getServerListByUser(loggedUser.username), loggedUser=loggedUser.username)
+
+@app.route('/createServer', methods=['GET', 'POST'])
+@login_required
+def createServer():
+    form = CreateServerForm()
+    if form.validate_on_submit():
+        if jsonServers.addServer(form.serverName.data, current_user.username):
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Server already exists')
+            return redirect(url_for('createServer'))
+    return render_template('createServer.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Create Server", PageNameLower="createserver")
 
 if __name__ == '__main__':
     jsonAccounts = AccountsStorer()
