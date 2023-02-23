@@ -139,6 +139,7 @@ node_modules/
 accounts.json
 serversConfig.json
 serverList.json
+*.db
 
 # tailwind css
 static/css/tailwind.css

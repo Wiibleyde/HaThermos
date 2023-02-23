@@ -11,8 +11,7 @@
             function CloseMessage (id) {
                 document.getElementById(id).style.display = "none";
             }
-        </script>
-    </head>
+        </script>    </head>
     <header>
         {% include "fragments/navbar.html" %}
         <!-- flash error message -->
@@ -59,15 +58,13 @@
     <body class="dark:bg-black dark:text-white">
         <div class="container mx-auto">
             <div class="flex flex-col items-center justify-center">
-                <h1 class="text-4xl font-bold">Your servers</h1>
+                <h1 class="text-4xl font-bold">Server : {{ server[1] }}</h1>
             </div>
-            <div class="flex flex-col items-center justify-center mt-52">
-                {% for server in servers %}
-                <a href="/server/{{ server[0] }}" class="block max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
-                    <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ server[1] }}</h5>
-                    <p class="font-normal text-gray-700 dark:text-gray-400">{{ server[3] }}</p>
-                </a>
-                {% endfor %}
+            <div class="flex flex-col items-center justify-center">
+                <h1 class="text-4xl font-bold">Version : {{ server[3] }}</h1>
+            </div>
+            <div class="flex flex-col items-center justify-center">
+                <h1 class="text-4xl font-bold">IP : {{ server[4] }} (Port for now)</h1>
             </div>
         </div>
     </body>

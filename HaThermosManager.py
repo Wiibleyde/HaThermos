@@ -8,6 +8,7 @@ import os
 import hashlib
 from subprocess import run
 import time
+import sqlite3
 
 # ==============================================================================
 # Environment variables 
@@ -92,139 +93,108 @@ class AccountsStorer:
             else:
                 return False
 
-class ServerStorer:
+class Servers:
+    # server is database
     def __init__(self, fileName):
-        print('Server : init', end='\r')
         self.fileName = fileName
-        if not os.path.exists(self.fileName):
-            print('Server : createFile', end='\r')
-            self.server = {}
-            self.createFile()
+        self.createDatabase()
+
+    def createDatabase(self):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('CREATE TABLE IF NOT EXISTS servers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, owner TEXT, serverVersion TEXT, serverPort INTEGER, serverPath TEXT)')
+        conn.commit()
+        conn.close()
+
+    def addServer(self, name, owner, serverVersion, serverPort, serverPath):
+        if self.testIfExist(name,owner):
+            return False
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('INSERT INTO servers (name, owner, serverVersion, serverPort, serverPath) VALUES (?, ?, ?, ?, ?)', (name, owner, serverVersion, serverPort, serverPath))
+        conn.commit()
+        conn.close()
+
+    def deleteServer(self, id):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('DELETE FROM servers WHERE id = ?', (id,))
+        conn.commit()
+        conn.close()
+
+    def modifyServer(self, id, name, owner, serverVersion, serverPort, serverPath):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('UPDATE servers SET name = ?, owner = ?, serverVersion = ?, serverPort = ?, serverPath = ? WHERE id = ?', (name, owner, serverVersion, serverPort, serverPath, id))
+        conn.commit()
+        conn.close()
+
+    def getServers(self):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('SELECT * FROM servers')
+        servers = c.fetchall()
+        conn.close()
+        return servers
+    
+    def getServer(self, id):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('SELECT * FROM servers WHERE id = ?', (id,))
+        server = c.fetchone()
+        conn.close()
+        return server
+    
+    def getServerByName(self, name):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('SELECT * FROM servers WHERE name = ?', (name,))
+        server = c.fetchone()
+        conn.close()
+        return server
+    
+    def getServerByOwner(self, owner):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('SELECT * FROM servers WHERE owner = ?', (owner,))
+        server = c.fetchall()
+        conn.close()
+        return server
+    
+    def getServerByPort(self, port):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('SELECT * FROM servers WHERE serverPort = ?', (port,))
+        server = c.fetchone()
+        conn.close()
+        return server
+    
+    def getServerByPath(self, path):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('SELECT * FROM servers WHERE serverPath = ?', (path,))
+        server = c.fetchone()
+        conn.close()
+        return server
+    
+    def getServerByVersion(self, version):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('SELECT * FROM servers WHERE serverVersion = ?', (version,))
+        server = c.fetchone()
+        conn.close()
+        return server
+    
+    def testIfExist(self, name, owner):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('SELECT * FROM servers WHERE name = ? AND owner = ?', (name, owner))
+        server = c.fetchone()
+        conn.close()
+        if server:
+            return True
         else:
-            print('Server : loadFile', end='\r')
-            self.loadFile()
-        print('Server : init done')
-
-    def createFile(self):
-        with open(self.fileName, 'w') as f:
-            json.dump(self.server, f)
-
-    def loadFile(self):
-        with open(self.fileName, 'r') as f:
-            self.server = json.load(f)
-
-    def addServer(self, serverName, username):
-        with open(self.fileName, 'r+') as f:
-            self.server = json.load(f)
-            if serverName in self.server:
-                return False
-            else:
-                self.server[serverName] = username
-                f.seek(0)
-                json.dump(self.server, f)
-                return True
-            
-    def deleteServer(self, serverName):
-        with open(self.fileName, 'r+') as f:
-            self.server = json.load(f)
-            if serverName in self.server:
-                del self.server[serverName]
-                f.seek(0)
-                json.dump(self.server, f)
-                return True
-            else:
-                return False
-            
-    def modifyServer(self, serverName, username):
-        with open(self.fileName, 'r+') as f:
-            self.server = json.load(f)
-            if serverName in self.server:
-                self.server[serverName] = username
-                f.seek(0)
-                json.dump(self.server, f)
-                return True
-            else:
-                return False
-            
-    def checkServer(self, serverName):
-        with open(self.fileName, 'r') as f:
-            self.server = json.load(f)
-            if serverName in self.server:
-                return True
-            else:
-                return False
-            
-    def getServer(self, serverName):
-        with open(self.fileName, 'r') as f:
-            self.server = json.load(f)
-            if serverName in self.server:
-                return self.server[serverName]
-            else:
-                return False
-            
-    def getServerList(self):
-        with open(self.fileName, 'r') as f:
-            self.server = json.load(f)
-            return list(self.server.keys())
-        
-    def getServerListByUser(self, username):
-        with open(self.fileName, 'r') as f:
-            self.server = json.load(f)
-            serverList = []
-            for server in self.server:
-                if self.server[server] == username:
-                    serverList.append(server)
-            return serverList
-
-class Server:
-    def __init__(self, serverName,serverPort,serverVersion,serverPropertiesFile):
-        self.serverName = serverName
-        self.fileName = 'server/' + serverName + '.json'
-        if not os.path.exists(self.fileName):
-            self.server = {"serverName":f"{serverName}", "serverPort":f"{serverPort}", "serverVersion":f"{serverVersion}", "serverPropertiesFile":f"{serverPropertiesFile}"}
-            self.createFile()
-        else:
-            self.loadFile()
-
-    def createFile(self):
-        with open(self.fileName, 'w') as f:
-            json.dump(self.server, f)
-
-    def loadFile(self):
-        with open(self.fileName, 'r') as f:
-            self.server = json.load(f)
-
-    def getServerName(self):
-        return self.server['serverName']
-    
-    def getServerPort(self):
-        return self.server['serverPort']
-    
-    def getServerVersion(self):
-        return self.server['serverVersion']
-    
-    def getServerPropertiesFile(self):
-        return self.server['serverPropertiesFile']
-    
-    def setServerName(self, serverName):
-        self.server['serverName'] = serverName
-        self.saveFile()
-
-    def setServerPort(self, serverPort):
-        self.server['serverPort'] = serverPort
-        self.saveFile()
-
-    def setServerVersion(self, serverVersion):
-        self.server['serverVersion'] = serverVersion
-        self.saveFile()
-
-    def setServerPropertiesFile(self, serverPropertiesFile):
-        self.server['serverPropertiesFile'] = serverPropertiesFile
-        self.saveFile()
-
-    def saveFile(self):
-        with open(self.fileName, 'w') as f:
-            json.dump(self.server, f)
+            return False
 
 class Config:
     def __init__(self):
@@ -393,72 +363,28 @@ def modifyAccount():
 @login_required
 def dashboard():
     loggedUser = current_user
-    print(loggedUser.username)
-    print(jsonServers.getServerListByUser(loggedUser.username))
-    return render_template('dashboard.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Dashboard", PageNameLower="dashboard", servers=jsonServers.getServerListByUser(loggedUser.username), loggedUser=loggedUser.username)
+    userServers = servers.getServerByOwner(loggedUser.username)
+    print(userServers)
+    return render_template('dashboard.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Dashboard", PageNameLower="dashboard", servers=userServers, loggedUser=loggedUser)
 
-@app.route('/createServer', methods=['GET', 'POST'])
+@app.route('/server/<id>')
 @login_required
-def createServer():
-    form = CreateServerForm()
-    if form.validate_on_submit():
-        if jsonServers.addServer(form.serverName.data, current_user.username):
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Server already exists')
-            return redirect(url_for('createServer'))
-    return render_template('createServer.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Create Server", PageNameLower="createserver")
-
-@app.route('/modifyServer', methods=['GET', 'POST'])
-@login_required
-def modifyServer():
-    form = ModifyServerForm()
-    if form.validate_on_submit():
-        if jsonServers.modifyServer(form.serverName.data, form.serverDifficulty.data, form.serverPVP.data, form.serverWhitelist.data, form.serverMaxPlayers.data):
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Server does not exist')
-            return redirect(url_for('modifyServer'))
-    return render_template('modifyServer.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Modify Server", PageNameLower="modifyserver")
-
-@app.route('/deleteServer', methods=['GET', 'POST'])
-@login_required
-def deleteServer():
-    form = DeleteServerForm()
-    if form.validate_on_submit():
-        if jsonServers.deleteServer(form.serverName.data):
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Server does not exist')
-            return redirect(url_for('deleteServer'))
-    return render_template('deleteServer.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Delete Server", PageNameLower="deleteserver")
-
-@app.route('/server/<serverName>')
-@login_required
-def server(serverName):
+def server(id):
     loggedUser = current_user
-    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", serverName=serverName, loggedUser=loggedUser.username)
-
-@app.route('/server/<serverName>/start')
-@login_required
-def startServer(serverName):
-    loggedUser = current_user
-    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", serverName=serverName, loggedUser=loggedUser.username)
-
-@app.route('/server/<serverName>/stop')
-@login_required
-def stopServer(serverName):
-    loggedUser = current_user
-    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", serverName=serverName, loggedUser=loggedUser.username)
+    server = servers.getServer(id)
+    if server[2] == loggedUser.username:
+        return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", server=server)
+    else:
+        return redirect(url_for('dashboard'))
+    
 
 if __name__ == '__main__':
     jsonAccounts = AccountsStorer()
     jsonAccounts.addAccount('admin', 'admin')
     jsonConfig = Config()
-    jsonServers = ServerStorer("serverList.json")
-    jsonServers.addServer("test", "nathan")
-    # buildCss()
+    servers = Servers("server.db")
+    servers.addServer("Test", "nathan", "1.19.2",25565, "/dev/null")
     createApp()
     app.register_error_handler(404, ErrorHandler)
-    app.run(port=5000)
+    app.run(port=5000, debug=True)
     
