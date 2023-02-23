@@ -336,14 +336,11 @@ def index():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        print("form validated")
         if jsonAccounts.checkAccount(form.username.data, form.password.data):
-            print("account exists")
             user = User(form.username.data)
             login_user(user)
             return redirect(url_for('dashboard'))
         else:
-            print("account does not exist")
             flash('Invalid username or password')
             return redirect(url_for('login'))
     else:
