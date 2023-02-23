@@ -135,8 +135,10 @@ dockerFolder/*
 # nodes modules
 node_modules/
 
-# accounts 
+# data storage 
 accounts.json
+serverConfig.json
+servers.json
 
 # tailwind css
 static/css/tailwind.css
