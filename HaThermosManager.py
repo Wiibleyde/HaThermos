@@ -362,6 +362,72 @@ def createServer():
             return redirect(url_for('createServer'))
     return render_template('createServer.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Create Server", PageNameLower="createserver")
 
+@app.route('/modifyServer', methods=['GET', 'POST'])
+@login_required
+def modifyServer():
+    form = ModifyServerForm()
+    if form.validate_on_submit():
+        if jsonServers.modifyServer(form.serverName.data, form.serverDifficulty.data, form.serverPVP.data, form.serverWhitelist.data, form.serverMaxPlayers.data):
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Server does not exist')
+            return redirect(url_for('modifyServer'))
+    return render_template('modifyServer.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Modify Server", PageNameLower="modifyserver")
+
+@app.route('/deleteServer', methods=['GET', 'POST'])
+@login_required
+def deleteServer():
+    form = DeleteServerForm()
+    if form.validate_on_submit():
+        if jsonServers.deleteServer(form.serverName.data):
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Server does not exist')
+            return redirect(url_for('deleteServer'))
+    return render_template('deleteServer.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Delete Server", PageNameLower="deleteserver")
+
+@app.route('/server/<serverName>')
+@login_required
+def server(serverName):
+    loggedUser = current_user
+    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", serverName=serverName, loggedUser=loggedUser.username)
+
+@app.route('/server/<serverName>/start')
+@login_required
+def startServer(serverName):
+    loggedUser = current_user
+    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", serverName=serverName, loggedUser=loggedUser.username)
+
+@app.route('/server/<serverName>/stop')
+@login_required
+def stopServer(serverName):
+    loggedUser = current_user
+    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", serverName=serverName, loggedUser=loggedUser.username)
+
+@app.route('/server/<serverName>/restart')
+@login_required
+def restartServer(serverName):
+    loggedUser = current_user
+    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", serverName=serverName, loggedUser=loggedUser.username)
+
+@app.route('/server/<serverName>/export')
+@login_required
+def exportServer(serverName):
+    loggedUser = current_user
+    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", serverName=serverName, loggedUser=loggedUser.username)
+
+@app.route('/server/<serverName>/import')
+@login_required
+def importServer(serverName):
+    loggedUser = current_user
+    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", serverName=serverName, loggedUser=loggedUser.username)
+
+@app.route('/server/<serverName>/console')
+@login_required
+def consoleServer(serverName):
+    loggedUser = current_user
+    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", serverName=serverName, loggedUser=loggedUser.username)
+
 if __name__ == '__main__':
     jsonAccounts = AccountsStorer()
     jsonAccounts.addAccount('admin', 'admin')
@@ -372,3 +438,4 @@ if __name__ == '__main__':
     createApp()
     app.register_error_handler(404, ErrorHandler)
     app.run(port=5000)
+    
