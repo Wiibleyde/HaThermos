@@ -137,8 +137,8 @@ node_modules/
 
 # data storage 
 accounts.json
-serverConfig.json
-servers.json
+serversConfig.json
+serverList.json
 
 # tailwind css
 static/css/tailwind.css

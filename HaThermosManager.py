@@ -178,7 +178,7 @@ class Server:
 
 class Config:
     def __init__(self):
-        self.fileName = 'serverConfig.json'
+        self.fileName = 'serversConfig.json'
         if not os.path.exists(self.fileName):
             self.config = {}
             self.createFile()
@@ -432,7 +432,7 @@ if __name__ == '__main__':
     jsonAccounts = AccountsStorer()
     jsonAccounts.addAccount('admin', 'admin')
     jsonConfig = Config()
-    jsonServers = Server("servers.json")
+    jsonServers = Server("serverList.json")
     jsonServers.addServer("test", "nathan")
     # buildCss()
     createApp()
