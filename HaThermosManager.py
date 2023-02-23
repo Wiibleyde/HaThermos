@@ -92,7 +92,7 @@ class AccountsStorer:
             else:
                 return False
 
-class Server:
+class ServerStorer:
     def __init__(self, fileName):
         print('Server : init', end='\r')
         self.fileName = fileName
@@ -175,6 +175,56 @@ class Server:
                 if self.server[server] == username:
                     serverList.append(server)
             return serverList
+
+class Server:
+    def __init__(self, serverName,serverPort,serverVersion,serverPropertiesFile):
+        self.serverName = serverName
+        self.fileName = 'server/' + serverName + '.json'
+        if not os.path.exists(self.fileName):
+            self.server = {"serverName":f"{serverName}", "serverPort":f"{serverPort}", "serverVersion":f"{serverVersion}", "serverPropertiesFile":f"{serverPropertiesFile}"}
+            self.createFile()
+        else:
+            self.loadFile()
+
+    def createFile(self):
+        with open(self.fileName, 'w') as f:
+            json.dump(self.server, f)
+
+    def loadFile(self):
+        with open(self.fileName, 'r') as f:
+            self.server = json.load(f)
+
+    def getServerName(self):
+        return self.server['serverName']
+    
+    def getServerPort(self):
+        return self.server['serverPort']
+    
+    def getServerVersion(self):
+        return self.server['serverVersion']
+    
+    def getServerPropertiesFile(self):
+        return self.server['serverPropertiesFile']
+    
+    def setServerName(self, serverName):
+        self.server['serverName'] = serverName
+        self.saveFile()
+
+    def setServerPort(self, serverPort):
+        self.server['serverPort'] = serverPort
+        self.saveFile()
+
+    def setServerVersion(self, serverVersion):
+        self.server['serverVersion'] = serverVersion
+        self.saveFile()
+
+    def setServerPropertiesFile(self, serverPropertiesFile):
+        self.server['serverPropertiesFile'] = serverPropertiesFile
+        self.saveFile()
+
+    def saveFile(self):
+        with open(self.fileName, 'w') as f:
+            json.dump(self.server, f)
 
 class Config:
     def __init__(self):
@@ -404,35 +454,11 @@ def stopServer(serverName):
     loggedUser = current_user
     return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", serverName=serverName, loggedUser=loggedUser.username)
 
-@app.route('/server/<serverName>/restart')
-@login_required
-def restartServer(serverName):
-    loggedUser = current_user
-    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", serverName=serverName, loggedUser=loggedUser.username)
-
-@app.route('/server/<serverName>/export')
-@login_required
-def exportServer(serverName):
-    loggedUser = current_user
-    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", serverName=serverName, loggedUser=loggedUser.username)
-
-@app.route('/server/<serverName>/import')
-@login_required
-def importServer(serverName):
-    loggedUser = current_user
-    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", serverName=serverName, loggedUser=loggedUser.username)
-
-@app.route('/server/<serverName>/console')
-@login_required
-def consoleServer(serverName):
-    loggedUser = current_user
-    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", serverName=serverName, loggedUser=loggedUser.username)
-
 if __name__ == '__main__':
     jsonAccounts = AccountsStorer()
     jsonAccounts.addAccount('admin', 'admin')
     jsonConfig = Config()
-    jsonServers = Server("serverList.json")
+    jsonServers = ServerStorer("serverList.json")
     jsonServers.addServer("test", "nathan")
     # buildCss()
     createApp()
