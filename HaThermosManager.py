@@ -13,7 +13,7 @@ import sqlite3
 # ==============================================================================
 # Environment variables 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret'
+app.config['SECRET_KEY'] = 'ceciestunsecret'
 login_manager=LoginManager()
 login_manager.init_app(app)
 # ==============================================================================
@@ -296,11 +296,20 @@ def createApp():
 
 def ErrorHandler(e):
     errorCode = e.code
-    return render_template("error.html", ErrorCode=errorCode, ProjectName=jsonConfig.getConfig('ProjectName'))
+    if errorCode == 404:
+        flash('Page not found', category='error')
+        return redirect(url_for(f"/{errorCode}"))
+    else:
+        flash('An error occured', category='error')
+        return redirect(url_for(f"/{errorCode}"))
 
 @app.route('/')
 def index():
     return render_template("index.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Home", PageNameLower="home")
+
+@app.route('/<code>')
+def error(code):
+    return render_template("error.html", ErrorCode=code, ProjectName=jsonConfig.getConfig('ProjectName'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -311,7 +320,7 @@ def login():
             login_user(user)
             return redirect(url_for('dashboard'))
         else:
-            flash('Invalid username or password')
+            flash('Invalid username or password', category='error')
             return redirect(url_for('login'))
     else:
         print(form.errors)
