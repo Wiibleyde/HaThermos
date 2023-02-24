@@ -387,6 +387,21 @@ def server(id):
         return redirect(url_for('dashboard'))
     
 
+@app.route('/createServer', methods=['GET', 'POST'])
+@login_required
+def createServer():
+    form = CreateServerForm()
+    if form.validate_on_submit():
+        if servers.addServer(form.serverName.data, current_user.username, form.serverVersion.data, 255565, "/dev/null"):
+            flash('Server created', category='success')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Server already exists', category='error')
+            return redirect(url_for('createServer'))
+    return render_template('createServer.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Create Server", PageNameLower="createserver")
+
+    
+
 if __name__ == '__main__':
     jsonAccounts = AccountsStorer()
     jsonAccounts.addAccount('admin', 'admin')
