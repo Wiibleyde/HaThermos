@@ -299,10 +299,10 @@ def ErrorHandler(e):
     errorCode = e.code
     if errorCode == 404:
         flash('Page not found', category='error')
-        return redirect(url_for(f"/{errorCode}"))
+        return redirect(url_for(f"/error/{errorCode}"))
     else:
         flash('An error occured', category='error')
-        return redirect(url_for(f"/{errorCode}"))
+        return redirect(url_for(f"/error/{errorCode}"))
 
 @app.route('/')
 def index():
@@ -311,7 +311,7 @@ def index():
         userAuth = True
     return render_template("index.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Home", PageNameLower="home", userAuth=userAuth)
 
-@app.route('/<code>')
+@app.route('/error/<code>')
 def error(code):
     userAuth = False
     if current_user.is_authenticated:
