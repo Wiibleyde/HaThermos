@@ -18,15 +18,23 @@
     <body class="dark:bg-black dark:text-white">
         <div class="container mx-auto">
             <div class="flex flex-col items-center justify-center">
-                <h1 class="text-4xl font-bold">Server : {{ server[1] }}</h1>
+                <h1 class="text-4xl font-bold">About {{ ProjectName }}</h1>
             </div>
-            <div class="flex flex-col items-center justify-center">
-                <h1 class="text-4xl font-bold">Version : {{ server[3] }}</h1>
+            <div class="flex flex-col items-center justify-center mt-52">
+                <p class="text-2xl font-bold">History</p>
+                <div>
+                    <p>{{ ProjectName }} is a project of 3 friends who had the idea to create their own Aternos as part of a first year project.</p>
+                </div>
+                <p class="text-2xl font-bold mt-2">Team</p>
+                <div class="flex flex-col items-center justify-center">
+                    <p>Our team is composed of 3 people:</p>
+                    <ul class="items-center justify-center mt-2">
+                        <li class="mb-2">Wiibleyde</li>
+                        <li class="mb-2">Gwuill</li>
+                        <li class="mb-2">Sml_Dreams</li>
+                    </ul>
+                </div>
             </div>
-            <div class="flex flex-col items-center justify-center">
-                <h1 class="text-4xl font-bold">IP : {{ server[4] }} (Port for now)</h1>
-            </div>
-        </div>
     </body>
     <footer>
         {% include "fragments/footer.html" %}

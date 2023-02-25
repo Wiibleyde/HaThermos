@@ -6,8 +6,8 @@ from wtforms.validators import DataRequired
 import json
 import os
 import hashlib
-from subprocess import run
 import time
+import subprocess
 import sqlite3
 
 # ==============================================================================
@@ -274,20 +274,13 @@ class DeleteServerForm(FlaskForm):
     submit = SubmitField('submit', render_kw={"value": "Delete"})
 
 def buildCss():
+    # install tailwindcss and build it
     print("Building CSS : downloading", end="\r")
-    run(["npm", "install", "-D", "tailwindcss"])
+    os.system("npm install tailwindcss --silent")
     print("Building CSS : downloading... Done")
     print("Building CSS : building", end="\r")
-    run(["npx", "tailwindcss", "-i", "./static/css/input.css", "-o", "./static/css/tailwind.css"])
-    time.sleep(1)
-    if os.path.exists("./static/css/tailwind.css"):
-        print("Building CSS : building... Done")
-        time.sleep(1)
-        return True
-    else:
-        print("Building CSS : building... Failed")
-        time.sleep(1)
-        return False
+    os.system("npx tailwindcss -i ./static/css/input.css -o ./static/css/tailwind.css --silent")
+    print("Building CSS : building... Done")
 
 def createApp():
     print("Creating app...", end="\r")
@@ -310,6 +303,14 @@ def index():
     if current_user.is_authenticated:
         userAuth = True
     return render_template("index.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Home", PageNameLower="home", userAuth=userAuth)
+
+@app.route('/about')
+def about():
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
+    return render_template("about.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="About", PageNameLower="about", userAuth=userAuth)
+
 
 @app.route('/error/<code>')
 def error(code):
@@ -436,6 +437,7 @@ if __name__ == '__main__':
     servers = Servers("server.db")
     servers.addServer("Test", "nathan", "1.19.2",25565, "/dev/null")
     createApp()
+    # buildCss()
     app.register_error_handler(404, ErrorHandler)
     app.run(port=5000, debug=True)
     
