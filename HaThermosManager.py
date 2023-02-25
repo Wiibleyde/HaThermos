@@ -292,10 +292,10 @@ def ErrorHandler(e):
     errorCode = e.code
     if errorCode == 404:
         flash('Page not found', category='error')
-        return redirect(url_for(f"/error/{errorCode}"))
+        return render_template("error.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Error", PageNameLower="error", userAuth=False), 404
     else:
         flash('An error occured', category='error')
-        return redirect(url_for(f"/error/{errorCode}"))
+        return render_template("error.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Error", PageNameLower="error", userAuth=False), 500
 
 @app.route('/')
 def index():
@@ -310,14 +310,6 @@ def about():
     if current_user.is_authenticated:
         userAuth = True
     return render_template("about.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="About", PageNameLower="about", userAuth=userAuth)
-
-
-@app.route('/error/<code>')
-def error(code):
-    userAuth = False
-    if current_user.is_authenticated:
-        userAuth = True
-    return render_template("error.html", ErrorCode=code, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Error", PageNameLower="error", userAuth=userAuth)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

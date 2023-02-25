@@ -4,7 +4,6 @@ To modify the CSS, you need to install TailwindCSS. You can do this by running t
 
 ```bash
 npm install -D tailwindcss
-npx tailwindcss init
 ```
 
 
