@@ -114,6 +114,7 @@ class Servers:
         c.execute('INSERT INTO servers (name, owner, serverVersion, serverPort, serverPath) VALUES (?, ?, ?, ?, ?)', (name, owner, serverVersion, serverPort, serverPath))
         conn.commit()
         conn.close()
+        return True
 
     def deleteServer(self, id):
         conn = sqlite3.connect(self.fileName)
@@ -305,15 +306,24 @@ def ErrorHandler(e):
 
 @app.route('/')
 def index():
-    return render_template("index.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Home", PageNameLower="home")
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
+    return render_template("index.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Home", PageNameLower="home", userAuth=userAuth)
 
 @app.route('/<code>')
 def error(code):
-    return render_template("error.html", ErrorCode=code, ProjectName=jsonConfig.getConfig('ProjectName'))
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
+    return render_template("error.html", ErrorCode=code, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Error", PageNameLower="error", userAuth=userAuth)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
     if form.validate_on_submit():
         if jsonAccounts.checkAccount(form.username.data, form.password.data):
             user = User(form.username.data)
@@ -324,17 +334,21 @@ def login():
             return redirect(url_for('login'))
     else:
         print(form.errors)
-    return render_template('login.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Login", PageNameLower="login")
+    return render_template('login.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Login", PageNameLower="login", userAuth=userAuth)
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
+    flash('Logged out', category='success')
     return redirect(url_for('index'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm()
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
     if form.validate_on_submit():
         if jsonAccounts.addAccount(form.username.data, form.password.data):
             flash('Account created', category='success')
@@ -342,11 +356,14 @@ def register():
         else:
             flash('Username already exists', category='error')
             return redirect(url_for('register'))
-    return render_template('register.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Register", PageNameLower="register")
+    return render_template('register.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Register", PageNameLower="register", userAuth=userAuth)
 
 @app.route('/deleteAccount', methods=['GET', 'POST'])
 @login_required
 def deleteAccount():
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
     form = DeleteAccountForm()
     if form.validate_on_submit():
         if jsonAccounts.deleteAccount(form.username.data):
@@ -354,11 +371,14 @@ def deleteAccount():
         else:
             flash('Invalid username or password')
             return redirect(url_for('deleteAccount'))
-    return render_template('deleteAccount.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Delete Account", PageNameLower="deleteaccount")
+    return render_template('deleteAccount.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Delete Account", PageNameLower="deleteaccount", userAuth=userAuth)
 
 @app.route('/modifyAccount', methods=['GET', 'POST'])
 @login_required
 def modifyAccount():
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
     form = ModifyAccountForm()
     if form.validate_on_submit():
         if jsonAccounts.modifyAccount(form.username.data, form.newPassword.data):
@@ -366,23 +386,29 @@ def modifyAccount():
         else:
             flash('Invalid username or password')
             return redirect(url_for('modifyAccount'))
-    return render_template('modifyAccount.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Modify Account", PageNameLower="modifyaccount")
+    return render_template('modifyAccount.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Modify Account", PageNameLower="modifyaccount", userAuth=userAuth)
 
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
     loggedUser = current_user
     userServers = servers.getServerByOwner(loggedUser.username)
     print(userServers)
-    return render_template('dashboard.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Dashboard", PageNameLower="dashboard", servers=userServers, loggedUser=loggedUser)
+    return render_template('dashboard.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Dashboard", PageNameLower="dashboard", servers=userServers, loggedUser=loggedUser, userAuth=userAuth)
 
 @app.route('/server/<id>')
 @login_required
 def server(id):
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
     loggedUser = current_user
     server = servers.getServer(id)
     if server[2] == loggedUser.username:
-        return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", server=server)
+        return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", server=server, loggedUser=loggedUser, userAuth=userAuth)
     else:
         return redirect(url_for('dashboard'))
     
@@ -390,6 +416,9 @@ def server(id):
 @app.route('/createServer', methods=['GET', 'POST'])
 @login_required
 def createServer():
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
     form = CreateServerForm()
     if form.validate_on_submit():
         if servers.addServer(form.serverName.data, current_user.username, form.serverVersion.data, 255565, "/dev/null"):
@@ -398,9 +427,7 @@ def createServer():
         else:
             flash('Server already exists', category='error')
             return redirect(url_for('createServer'))
-    return render_template('createServer.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Create Server", PageNameLower="createserver")
-
-    
+    return render_template('createServer.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Create Server", PageNameLower="createserver", userAuth=userAuth)
 
 if __name__ == '__main__':
     jsonAccounts = AccountsStorer()
