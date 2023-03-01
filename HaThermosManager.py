@@ -459,7 +459,7 @@ if __name__ == '__main__':
     jsonAccounts = AccountsStorer()
     jsonConfig = Config()
     servers = Servers("server.db")
-    disableFlaskLogging()
+    # disableFlaskLogging()
     createApp()
     app.register_error_handler(404, ErrorHandler)
     app.run(port=5000, debug=True)
