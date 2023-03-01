@@ -9,6 +9,7 @@ import hashlib
 import time
 import subprocess
 import sqlite3
+import logging
 
 # ==============================================================================
 # Environment variables 
@@ -117,18 +118,26 @@ class Servers:
         return True
 
     def deleteServer(self, id):
-        conn = sqlite3.connect(self.fileName)
-        c = conn.cursor()
-        c.execute('DELETE FROM servers WHERE id = ?', (id,))
-        conn.commit()
-        conn.close()
+        try:
+            conn = sqlite3.connect(self.fileName)
+            c = conn.cursor()
+            c.execute('DELETE FROM servers WHERE id = ?', (id,))
+            conn.commit()
+            conn.close()
+            return True
+        except:
+            return False
 
     def modifyServer(self, id, name, owner, serverVersion, serverPort, serverPath):
-        conn = sqlite3.connect(self.fileName)
-        c = conn.cursor()
-        c.execute('UPDATE servers SET name = ?, owner = ?, serverVersion = ?, serverPort = ?, serverPath = ? WHERE id = ?', (name, owner, serverVersion, serverPort, serverPath, id))
-        conn.commit()
-        conn.close()
+        try:
+            conn = sqlite3.connect(self.fileName)
+            c = conn.cursor()
+            c.execute('UPDATE servers SET name = ?, owner = ?, serverVersion = ?, serverPort = ?, serverPath = ? WHERE id = ?', (name, owner, serverVersion, serverPort, serverPath, id))
+            conn.commit()
+            conn.close()
+            return True
+        except:
+            return False
 
     def getServers(self):
         conn = sqlite3.connect(self.fileName)
@@ -201,8 +210,9 @@ class Config:
     def __init__(self):
         self.fileName = 'serversConfig.json'
         if not os.path.exists(self.fileName):
-            self.config = {}
+            self.config = {"ProjectName":"HaThermos"}
             self.createFile()
+            print('Config file created')
         else:
             self.loadConfig()
             
@@ -276,7 +286,8 @@ class DeleteServerForm(FlaskForm):
 def buildCss():
     # install tailwindcss and build it
     print("Building CSS : downloading", end="\r")
-    os.system("npm install tailwindcss --silent")
+    if not os.path.exists("./node_modules"):
+        os.system("npm install tailwindcss --silent")
     print("Building CSS : downloading... Done")
     print("Building CSS : building", end="\r")
     os.system("npx tailwindcss -i ./static/css/input.css -o ./static/css/tailwind.css --silent")
@@ -286,7 +297,12 @@ def createApp():
     print("Creating app...", end="\r")
     app = Flask(__name__)
     print("Creating app... Done")
+    buildCss()
     return app
+
+def disableFlaskLogging():
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
 
 def ErrorHandler(e):
     errorCode = e.code
@@ -310,6 +326,13 @@ def about():
     if current_user.is_authenticated:
         userAuth = True
     return render_template("about.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="About", PageNameLower="about", userAuth=userAuth)
+
+@app.route('/contact')
+def contact():
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
+    return render_template("contact.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Contact", PageNameLower="contact", userAuth=userAuth)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -422,14 +445,22 @@ def createServer():
             return redirect(url_for('createServer'))
     return render_template('createServer.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Create Server", PageNameLower="createserver", userAuth=userAuth)
 
+@app.route('/deleteServer/<id>', methods=['GET', 'POST'])
+@login_required
+def deleteServer(id):
+    if servers.deleteServer(id):
+        flash('Server deleted', category='success')
+        return redirect(url_for('dashboard'))
+    else:
+        flash('Invalid server', category='error')
+        return redirect(url_for('dashboard'))
+
 if __name__ == '__main__':
     jsonAccounts = AccountsStorer()
-    jsonAccounts.addAccount('admin', 'admin')
     jsonConfig = Config()
     servers = Servers("server.db")
-    servers.addServer("Test", "nathan", "1.19.2",25565, "/dev/null")
+    disableFlaskLogging()
     createApp()
-    # buildCss()
     app.register_error_handler(404, ErrorHandler)
     app.run(port=5000, debug=True)
     
