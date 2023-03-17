@@ -1,45 +1,45 @@
-function closeMessageAfterTimeout(id) {
-    console.log("Starting timeout for " + id);
-    setTimeout(function() {
-        fadeOut(document.querySelector(id));
-    }, 5000);
-}
-  
 function closeMessageOnClick(id) {
     document.querySelector(id).addEventListener("click", function() {
-        fadeOut(document.querySelector(id));
+        this.style.display = "none";
     });
 }
   
-function fadeOut(element) {
-    let opacity = 1;
-    const intervalId = setInterval(frame, 50);
+// function closeMessageAfterTimeout(id) {
+//     console.log("Starting timeout for " + id);
+//     setTimeout(function() {
+//         fadeOut(document.querySelector(id));
+//     }, 5000);
+// }
   
-    function frame() {
-        if (opacity <= 0) {
-            clearInterval(intervalId);
-            element.style.display = "none";
-        } else {
-            opacity -= 0.1;
-            element.style.opacity = opacity;
-        }
-    }
-}
+// function fadeOut(element) {
+//     let opacity = 1;
+//     const intervalId = setInterval(frame, 50);
   
-function progressBar(id) {
-    const element = document.querySelector(id);
-    let width = 0;
-    const intervalId = setInterval(frame, 50);
+//     function frame() {
+//         if (opacity <= 0) {
+//             clearInterval(intervalId);
+//             element.style.display = "none";
+//         } else {
+//             opacity -= 0.1;
+//             element.style.opacity = opacity;
+//         }
+//     }
+// }
   
-    function frame() {
-        if (width >= 100) {
-            clearInterval(intervalId);
-        } else {
-            width++;
-            element.style.width = `${width}%`;
-        }
-    }
-}
+// function progressBar(id) {
+//     const element = document.querySelector(id);
+//     let width = 0;
+//     const intervalId = setInterval(frame, 50);
+  
+//     function frame() {
+//         if (width >= 100) {
+//             clearInterval(intervalId);
+//         } else {
+//             width++;
+//             element.style.width = `${width}%`;
+//         }
+//     }
+// }
 
 function detecterForceMotDePasse(motDePasse) {
     let force = 0;
