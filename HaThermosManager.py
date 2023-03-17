@@ -10,7 +10,6 @@ import time
 import logging
 import sqlite3
 import logging
-import requests
 
 # ==============================================================================
 # Environment variables 
@@ -242,27 +241,7 @@ class Servers:
             return True
         else:
             return False
-        
-    def download(self,version):
-        link = ""
-        logger.addDebug(f"Downloading the server {version}")
-        with open("serverLink.json", "r") as f:
-            link = json.load(f)[version]
-        if link == "":
-            logger.addError(f"No link found for {version}")
-            return False
-        else:
-            logger.addDebug(f"Link found for {version}, begin download")
-            logger.addDebug(f"Link: {link}")
-            response = requests.get(link)
-            file_name = link.split("/")[-1]
-            # Open a file for writing in binary mode
-            with open(f"data/servers/{file_name}", "wb") as file:
-                file.write(response.content)
-                
-            print("File downloaded successfully!")
-            logger.addDebug(f"Download finished")
-            return True
+
 class Config:
     def __init__(self):
         self.fileName = 'serversConfig.json'
@@ -509,17 +488,16 @@ def deleteServer(id):
         flash('Invalid server', category='error')
         return redirect(url_for('dashboard'))
 
-jsonConfig = Config()
-flaskLog = logging.getLogger('werkzeug')
-flaskLog.disabled = True
-logger = Logger("logs.log",jsonConfig.getConfig("DebugMode"))
-jsonAccounts = AccountsStorer()
-jsonAccounts.addAccount('admin', 'admin')
-jsonConfig = Config()
-servers = Servers("server.db")
-servers.download("1.16.5")
-createApp()
-# buildCss()
-app.register_error_handler(404, ErrorHandler)
-app.run(port=5000, debug=True)
-    
+if __name__ == '__main__':
+    jsonConfig = Config()
+    flaskLog = logging.getLogger('werkzeug')
+    flaskLog.disabled = True
+    logger = Logger("logs.log",jsonConfig.getConfig("DebugMode"))
+    jsonAccounts = AccountsStorer()
+    jsonAccounts.addAccount('admin', 'admin')
+    jsonConfig = Config()
+    servers = Servers("server.db")
+    createApp()
+    # buildCss()
+    app.register_error_handler(404, ErrorHandler)
+    app.run(port=5000, debug=False)
