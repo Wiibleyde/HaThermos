@@ -322,10 +322,10 @@ class DeleteServerForm(FlaskForm):
 
 def buildCss():
     logger.addDebug("Building CSS : downloading")
-    os.system("npm i")
+    os.system("npm i --silent")
     logger.addDebug("Building CSS : downloading... Done")
     logger.addDebug("Building CSS : building")
-    os.system("npx tailwindcss -i ./static/css/input.css -o ./static/css/tailwind.css")
+    os.system("npx tailwindcss -i ./static/css/input.css -o ./static/css/tailwind.css --silent")
     logger.addDebug("Building CSS : building... Done")
 
 def createApp():
