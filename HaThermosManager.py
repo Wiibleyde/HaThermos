@@ -378,8 +378,6 @@ def login():
         else:
             flash('Invalid username or password', category='error')
             return redirect(url_for('login'))
-    else:
-        logger.addError(form.errors)
     return render_template('login.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Login", PageNameLower="login", userAuth=userAuth)
 
 @app.route('/logout')
