@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        {% include "fragments/import.html" %}
+        <title>{{ ProjectName }} - {{ PageName }}</title>
+        <script>
+            function CloseMessage (id) {
+                document.getElementById(id).style.display = "none";
+            }
+        </script>    </head>
+    <header>
+        {% include "fragments/navbar.html" %}
+        {% include "fragments/message.html" %}
+    </header>
+    <body class="dark:bg-black dark:text-white">
+        <div class="container mx-auto">
+            <div class="flex flex-col items-center justify-center">
+                <h1 class="text-4xl font-bold">Contact members of {{ ProjectName }}</h1>
+            </div>
+            <div class="flex flex-col items-center justify-center mt-52">
+                <p class="text-2xl font-bold">Contact team members</p>
+                <p class="text-2xl font-bold mt-2">Team</p>
+                <div class="flex flex-col items-center justify-center">
+                    <p>Our team is composed of 3 people:</p>
+                    <table class="table-auto mt-2">
+                        <thead class="bg-gray-50 dark:bg-gray-800">
+                            <tr>
+                                <th class="bg-opacity-0"></th>
+                                <th>Wiibleyde</th>
+                                <th>Gwuill</th>
+                                <th>Sml_Dreams</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-600">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap font-semibold">Discord : </td>
+                                <td class="px-6 py-4 whitespace-nowrap">Wiibleyde#2834</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Gwuill#2679</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Sml_Dreams#7449</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap font-semibold">Email : </td>
+                                <td class="px-6 py-4 whitespace-nowrap">nathan@bonnell.fr</td>
+                                <td class="px-6 py-4 whitespace-nowrap"> </td>
+                                <td class="px-6 py-4 whitespace-nowrap"> </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap font-semibold">Github : </td>
+                                <td class="px-6 py-4 whitespace-nowrap"><a href="https://github.com/Wiibleyde">Github Profile</a></td>
+                                <td class="px-6 py-4 whitespace-nowrap"><a href="https://github.com/Gwuill">Github Profile</a></td>
+                                <td class="px-6 py-4 whitespace-nowrap"><a href="https://github.com/Sml-Dreams">Github Profile</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p></p>
+            </div>
+        </div>
+    </body>
+    <footer>
+        {% include "fragments/footer.html" %}
+    </footer>
+</html>
