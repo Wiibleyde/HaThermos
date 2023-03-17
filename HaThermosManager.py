@@ -334,10 +334,6 @@ def createApp():
     logger.addDebug("Creating app... Done")
     return app
 
-def disableFlaskLogging():
-    log = logging.getLogger('werkzeug')
-    log.setLevel(logging.ERROR)
-
 def ErrorHandler(e):
     errorCode = e.code
     if errorCode == 404:
@@ -503,9 +499,8 @@ if __name__ == '__main__':
     jsonAccounts.addAccount('admin', 'admin')
     jsonConfig = Config()
     servers = Servers("server.db")
-    # disableFlaskLogging()
     createApp()
-    # buildCss()
+    buildCss()
     app.register_error_handler(404, ErrorHandler)
     app.run(port=5000, debug=True)
     
