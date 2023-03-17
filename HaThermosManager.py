@@ -7,7 +7,7 @@ import json
 import os
 import hashlib
 import time
-import subprocess
+import logging
 import sqlite3
 
 # ==============================================================================
@@ -33,14 +33,14 @@ def unauthorized():
 
 class AccountsStorer:
     def __init__(self):
-        print('AccountsStorer : init', end='\r')
+        logger.addDebug('AccountsStorer : init')
         self.fileName = 'accounts.json'
         if not os.path.exists(self.fileName):
-            print('AccountsStorer : createFile', end='\r')
+            logger.addDebug('AccountsStorer : createFile')
             self.accounts = {}
             self.createFile()
-        print('AccountsStorer : loadFile', end='\r')
-        print('AccountsStorer : init done')
+        logger.addDebug('AccountsStorer : loadFile')
+        logger.addDebug('AccountsStorer : init done')
 
     def createFile(self):
         with open('accounts.json', 'w') as f:
@@ -92,6 +92,42 @@ class AccountsStorer:
                 return True
             else:
                 return False
+            
+class Logger:
+    def __init__(self,fileName:str,debugMode:bool):
+        self.fileName = fileName
+        self.debugMode = debugMode
+        self.createFile()
+
+    def createFile(self):
+        if not os.path.exists(self.fileName):
+            with open(self.fileName, 'w') as f:
+                pass
+
+    def addLog(self,message):
+        with open(self.fileName, 'a') as f:
+            f.write(f"{message}\n")
+    
+    def addDebug(self,message):
+        strMessage = f"[{time.strftime('%d/%m/%Y %H:%M:%S')}] [DEBUG] {message}"
+        if self.debugMode:
+            print(strMessage)
+        self.addLog(strMessage)
+
+    def addInfo(self,message):
+        strMessage = f"[{time.strftime('%d/%m/%Y %H:%M:%S')}] [INFO] {message}"
+        print(strMessage)
+        self.addLog(strMessage)
+
+    def addWarning(self,message):
+        strMessage = f"[{time.strftime('%d/%m/%Y %H:%M:%S')}] [WARNING] {message}"
+        print(strMessage)
+        self.addLog(strMessage)
+
+    def addError(self,message):
+        strMessage = f"[{time.strftime('%d/%m/%Y %H:%M:%S')}] [ERROR] {message}"
+        print(strMessage)
+        self.addLog(strMessage)
 
 class Servers:
     # server is database
@@ -201,14 +237,14 @@ class Config:
     def __init__(self):
         self.fileName = 'serversConfig.json'
         if not os.path.exists(self.fileName):
-            self.config = {}
+            self.config = {"ProjectName":"HaThermos","DebugMode":True}
             self.createFile()
         else:
             self.loadConfig()
             
     def createFile(self):
         with open(self.fileName, 'w') as f:
-            json.dump(self.config, f)
+            json.dump(self.config, f,indent=4)
             
     def loadConfig(self):
         with open(self.fileName, 'r') as f:
@@ -241,6 +277,7 @@ class LoginForm(FlaskForm):
 class RegisterForm(FlaskForm):
     username = StringField('username', validators=[DataRequired()], render_kw={"placeholder": "Username", "class": "text-black"})
     password = StringField('password', validators=[DataRequired()], render_kw={"placeholder": "Password", "type": "password", "class": "text-black"})
+    confirmPassword = StringField('password', validators=[DataRequired()], render_kw={"placeholder": "Confirm password", "type": "password", "class": "text-black"})
     submit = SubmitField('submit', render_kw={"value": "Register", "class": "text-white"})
 
 class DeleteAccountForm(FlaskForm):
@@ -274,18 +311,17 @@ class DeleteServerForm(FlaskForm):
     submit = SubmitField('submit', render_kw={"value": "Delete"})
 
 def buildCss():
-    # install tailwindcss and build it
-    print("Building CSS : downloading", end="\r")
-    os.system("npm install tailwindcss --silent")
-    print("Building CSS : downloading... Done")
-    print("Building CSS : building", end="\r")
-    os.system("npx tailwindcss -i ./static/css/input.css -o ./static/css/tailwind.css --silent")
-    print("Building CSS : building... Done")
+    logger.addDebug("Building CSS : downloading")
+    os.system("npm i")
+    logger.addDebug("Building CSS : downloading... Done")
+    logger.addDebug("Building CSS : building")
+    os.system("npx tailwindcss -i ./static/css/input.css -o ./static/css/tailwind.css")
+    logger.addDebug("Building CSS : building... Done")
 
 def createApp():
-    print("Creating app...", end="\r")
+    logger.addDebug("Creating app...")
     app = Flask(__name__)
-    print("Creating app... Done")
+    logger.addDebug("Creating app... Done")
     return app
 
 def ErrorHandler(e):
@@ -326,7 +362,7 @@ def login():
             flash('Invalid username or password', category='error')
             return redirect(url_for('login'))
     else:
-        print(form.errors)
+        logger.addError(form.errors)
     return render_template('login.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Login", PageNameLower="login", userAuth=userAuth)
 
 @app.route('/logout')
@@ -343,11 +379,15 @@ def register():
     if current_user.is_authenticated:
         userAuth = True
     if form.validate_on_submit():
-        if jsonAccounts.addAccount(form.username.data, form.password.data):
-            flash('Account created', category='success')
-            return redirect(url_for('login'))
+        if form.confirmPassword.data == form.password.data:
+            if jsonAccounts.addAccount(form.username.data, form.password.data):
+                flash('Account created', category='success')
+                return redirect(url_for('login'))
+            else:
+                flash('Username already exists', category='error')
+                return redirect(url_for('register'))
         else:
-            flash('Username already exists', category='error')
+            flash('Passwords do not match', category='error')
             return redirect(url_for('register'))
     return render_template('register.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Register", PageNameLower="register", userAuth=userAuth)
 
@@ -389,7 +429,6 @@ def dashboard():
         userAuth = True
     loggedUser = current_user
     userServers = servers.getServerByOwner(loggedUser.username)
-    print(userServers)
     return render_template('dashboard.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Dashboard", PageNameLower="dashboard", servers=userServers, loggedUser=loggedUser, userAuth=userAuth)
 
 @app.route('/server/<id>')
@@ -423,13 +462,18 @@ def createServer():
     return render_template('createServer.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Create Server", PageNameLower="createserver", userAuth=userAuth)
 
 if __name__ == '__main__':
+    jsonConfig = Config()
+    flaskLog = logging.getLogger('werkzeug')
+    flaskLog.disabled = True
+    # osLog = logging.getLogger('os')
+    # osLog.disabled = True
+    logger = Logger("logs.log",jsonConfig.getConfig("DebugMode"))
     jsonAccounts = AccountsStorer()
     jsonAccounts.addAccount('admin', 'admin')
-    jsonConfig = Config()
     servers = Servers("server.db")
     servers.addServer("Test", "nathan", "1.19.2",25565, "/dev/null")
     createApp()
-    # buildCss()
+    buildCss()
     app.register_error_handler(404, ErrorHandler)
     app.run(port=5000, debug=True)
     
