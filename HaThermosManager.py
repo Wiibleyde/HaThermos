@@ -485,21 +485,6 @@ def deleteServer(id):
     else:
         flash('Invalid server', category='error')
         return redirect(url_for('dashboard'))
-    
-@app.route('/myaccount', methods=['GET', 'POST'])
-@login_required
-def myaccount():
-    userAuth = False
-    if current_user.is_authenticated:
-        userAuth = True
-    form = ModifyAccountForm()
-    if form.validate_on_submit():
-        if jsonAccounts.modifyAccount(form.username.data,form.newPassword.data):
-            return redirect(url_for('login'))
-        else:
-            flash('Invalid username or password')
-            return redirect(url_for('myaccount'))
-    return render_template('account.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="My Account", PageNameLower="myaccount", userAuth=userAuth)
 
 if __name__ == '__main__':
     jsonConfig = Config()
