@@ -243,11 +243,7 @@ class Servers:
             return False
         
 class DockerUtil:
-    def __init__(self, id, name):
-        self.id = id
-        self.name = name
-
-    def buildServer(self,version):
+    def buildServer(self,name,version):
         # path : data/server/version then run dockerfile
         if not os.path.exists(f'data/server/{version}'):
             logger.addWarning(f'Build server {version} failed : Server folder not found')
@@ -262,39 +258,39 @@ class DockerUtil:
                 return False
             else:
                 # build docker
-                os.system(f'docker build -t {self.name} data/server/{version}')
+                os.system(f'docker build -t {name} data/server/{version}')
                 logger.addInfo(f'Server {version} built')
                 return True
             
-    def startServer(self,version):
+    def startServer(self,name,version):
         if self.testIfExist():
-            os.system(f'docker start {self.name}')
+            os.system(f'docker start {name}')
             logger.addInfo(f'Server {version} started')
             return True
         else:
             logger.addWarning(f'Start server {version} failed : Server not exist')
             return False
         
-    def stopServer(self,version):
+    def stopServer(self,name,version):
         if self.testIfExist():
-            os.system(f'docker stop {self.name}')
+            os.system(f'docker stop {name}')
             logger.addInfo(f'Server {version} stopped')
             return True
         else:
             logger.addWarning(f'Stop server {version} failed : Server not exist')
             return False
         
-    def deleteServer(self,version):
+    def deleteServer(self,name,version):
         if self.testIfExist():
-            os.system(f'docker rm {self.name}')
+            os.system(f'docker rm {name}')
             logger.addInfo(f'Server {version} deleted')
             return True
         else:
             logger.addWarning(f'Delete server {version} failed : Server not exist')
             return False
         
-    def testIfExist(self):
-        if os.system(f'docker ps -a | grep {self.name}') == 0:
+    def testIfExist(self,name):
+        if os.system(f'docker ps -a | grep {name}') == 0:
             return True
         else:
             return False
