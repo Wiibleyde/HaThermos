@@ -25,11 +25,15 @@
                             {{ form.username }}
                         </div>
                         <div class="flex flex-col items-center justify-center text-black my-1">
+                            {{ form.email }}
+                        </div>
+                        <div class="flex flex-col items-center justify-center text-black my-1">
                             {{ form.password }}
                         </div>
                         <div class="flex flex-col items-center justify-center text-black my-1">
                             {{ form.confirmPassword }}
                         </div>
+                        <div id="matchMessage" class="flex flex-col items-center justify-center my-1"></div>
                         <div class="flex flex-col items-center justify-center">
                             {{ form.submit }}
                         </div>
@@ -39,6 +43,39 @@
         </div>
     </body>
     <script src="/static/js/script.js"></script>
+    <script>
+        function passwordMatch(password1,password2) {
+            if (password1.value != password2.value) {
+                return true
+            } else {
+                return false
+            }
+        }
+
+        function checkPasswordMatch() {
+            let password = document.getElementById("password")
+            let confirmPassword = document.getElementById("confirmPassword")
+            if (password.value == "" || confirmPassword.value == "") {
+                document.getElementById("matchMessage").innerHTML = ""
+                return
+            }
+            if (passwordMatch(password,confirmPassword)) {
+                document.getElementById("password").classList.add("border-red-500")
+                document.getElementById("confirmPassword").classList.add("border-red-500")
+                document.getElementById("matchMessage").innerHTML = "Passwords do not match"
+                document.getElementById("matchMessage").classList.add("text-red-500")
+            } else {
+                document.getElementById("password").classList.remove("border-red-500")
+                document.getElementById("confirmPassword").classList.remove("border-red-500")
+                document.getElementById("matchMessage").innerHTML = "Passwords match"
+                document.getElementById("matchMessage").classList.remove("text-red-500")
+                document.getElementById("matchMessage").classList.add("text-green-500")
+            }
+        }
+
+        document.getElementById("password").addEventListener("keyup",checkPasswordMatch)
+        document.getElementById("confirmPassword").addEventListener("keyup",checkPasswordMatch)
+    </script>
     <footer>
         {% include "fragments/footer.html" %}
     </footer>

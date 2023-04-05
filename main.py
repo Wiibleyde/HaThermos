@@ -32,68 +32,6 @@ def load_user(user_id):
 def unauthorized():
     return redirect(url_for('login'))
 
-class AccountsStorer:
-    def __init__(self):
-        logger.addDebug('AccountsStorer : init')
-        self.fileName = 'accounts.json'
-        if not os.path.exists(self.fileName):
-            logger.addDebug('AccountsStorer : createFile')
-            self.accounts = {}
-            self.createFile()
-        logger.addDebug('AccountsStorer : loadFile')
-        logger.addDebug('AccountsStorer : init done')
-
-    def createFile(self):
-        with open('accounts.json', 'w') as f:
-            json.dump(self.accounts, f)
-
-    def addAccount(self, username, password):
-        with open(self.fileName, 'r+') as f:
-            self.accounts = json.load(f)
-            if username in self.accounts:
-                return False
-            else:
-                encodedPassword = hashlib.sha256(password.encode('utf-8')).hexdigest()
-                self.accounts[username] = encodedPassword
-                f.seek(0)
-                json.dump(self.accounts, f)
-                return True
-            
-    def checkAccount(self, username, password):
-        with open(self.fileName, 'r') as f:
-            self.accounts = json.load(f)
-            if username in self.accounts:
-                encodedPassword = hashlib.sha256(password.encode('utf-8')).hexdigest()
-                if self.accounts[username] == encodedPassword:
-                    return True
-                else:
-                    return False
-            else:
-                return False
-            
-    def deleteAccount(self, username):
-        with open(self.fileName, 'r+') as f:
-            self.accounts = json.load(f)
-            if username in self.accounts:
-                del self.accounts[username]
-                f.seek(0)
-                json.dump(self.accounts, f)
-                return True
-            else:
-                return False
-            
-    def modifyAccount(self, username, password):
-        with open(self.fileName, 'r+') as f:
-            self.accounts = json.load(f)
-            if username in self.accounts:
-                encodedPassword = hashlib.sha256(password.encode('utf-8')).hexdigest()
-                self.accounts[username] = encodedPassword
-                f.seek(0)
-                json.dump(self.accounts, f)
-                return True
-            else:
-                return False
-            
 class Logger:
     def __init__(self,fileName:str,debugMode:bool):
         self.fileName = fileName
@@ -130,7 +68,7 @@ class Logger:
         print(strMessage)
         self.addLog(strMessage)
 
-class Servers:
+class Database:
     # server is database
     def __init__(self, fileName):
         self.fileName = fileName
@@ -140,6 +78,7 @@ class Servers:
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
         c.execute('CREATE TABLE IF NOT EXISTS servers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, owner TEXT, serverVersion TEXT, serverPort INTEGER, serverPath TEXT)')
+        c.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, email TEXT, password TEXT, admin BOOLEAN)')
         conn.commit()
         conn.close()
 
@@ -242,6 +181,116 @@ class Servers:
         else:
             return False
         
+    def addAdmin(self, username, email, password):
+        if self.testIfUserExist(username):
+            return False
+        hashPassword = hashlib.sha256(password.encode()).hexdigest()
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('INSERT INTO users (username, email, password, admin) VALUES (?, ?, ?, ?)', (username, email, hashPassword, True))
+        conn.commit()
+        conn.close()
+        return True
+    
+    def addUser(self, username, email, password):
+        if self.testIfUserExist(username):
+            return False
+        hashPassword = hashlib.sha256(password.encode()).hexdigest()
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('INSERT INTO users (username, email, password, admin) VALUES (?, ?, ?, ?)', (username, email, hashPassword, False))
+        conn.commit()
+        conn.close()
+        return True
+    
+    def deleteUser(self, id):
+        try:
+            conn = sqlite3.connect(self.fileName)
+            c = conn.cursor()
+            c.execute('DELETE FROM users WHERE id = ?', (id,))
+            conn.commit()
+            conn.close()
+            return True
+        except:
+            return False
+        
+    def modifyUser(self, id, username, email, password, admin):
+        try:
+            conn = sqlite3.connect(self.fileName)
+            c = conn.cursor()
+            c.execute('UPDATE users SET username = ?, email = ?, password = ?, admin = ? WHERE id = ?', (username, email, password, admin, id))
+            conn.commit()
+            conn.close()
+            return True
+        except:
+            return False
+        
+    def getUsers(self):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('SELECT * FROM users')
+        users = c.fetchall()
+        conn.close()
+        return users
+    
+    def getUser(self, id):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('SELECT * FROM users WHERE id = ?', (id,))
+        user = c.fetchone()
+        conn.close()
+        return user
+    
+    def getUserByName(self, username):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('SELECT * FROM users WHERE username = ?', (username,))
+        user = c.fetchone()
+        conn.close()
+        return user
+    
+    def getUserByEmail(self, email):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('SELECT * FROM users WHERE email = ?', (email,))
+        user = c.fetchone()
+        conn.close()
+        return user
+    
+    def testIfUserExist(self, username):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('SELECT * FROM users WHERE username = ?', (username,))
+        user = c.fetchone()
+        conn.close()
+        if user:
+            return True
+        else:
+            return False
+        
+    def testIfUserExistByEmail(self, email):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('SELECT * FROM users WHERE email = ?', (email,))
+        user = c.fetchone()
+        conn.close()
+        if user:
+            return True
+        else:
+            return False
+        
+    def checkUser(self, data, password):
+        if self.testIfUserExist(data):
+            user = self.getUserByName(data)
+        elif self.testIfUserExistByEmail(data):
+            user = self.getUserByEmail(data)
+        else:
+            return False
+        if user[3] == hashlib.sha256(password.encode()).hexdigest():
+            return user
+        else:
+            return False
+        
 class DockerUtil:
     def buildServer(self,name,version):
         # path : data/server/version then run dockerfile
@@ -333,41 +382,21 @@ class Config:
         return self.config[key]
 
 class LoginForm(FlaskForm):
-    username = StringField('username', validators=[DataRequired()], render_kw={"placeholder": "Username", "class": "text-black"})
+    usernameOrEmail = StringField('usernameOrEmail', validators=[DataRequired()], render_kw={"placeholder": "Username/Email", "class": "text-black"})
     password = StringField('password', validators=[DataRequired()], render_kw={"placeholder": "Password", "type": "password", "class": "text-black"})
     submit = SubmitField('submit', render_kw={"value": "Login", "class": "text-white"})
 
 class RegisterForm(FlaskForm):
-    username = StringField('username', validators=[DataRequired()], render_kw={"placeholder": "Username", "class": "text-black"})
+    username = StringField('usernameOrEmail', validators=[DataRequired()], render_kw={"placeholder": "Username", "class": "text-black"})
+    email = StringField('email', validators=[DataRequired()], render_kw={"placeholder": "Email", "class": "text-black"})
     password = StringField('password', validators=[DataRequired()], render_kw={"placeholder": "Password", "type": "password", "class": "text-black"})
     confirmPassword = StringField('password', validators=[DataRequired()], render_kw={"placeholder": "Confirm password", "type": "password", "class": "text-black"})
     submit = SubmitField('submit', render_kw={"value": "Register", "class": "text-white"})
 
-class DeleteAccountForm(FlaskForm):
-    username = StringField('username', validators=[DataRequired()])
-    password = StringField('password', validators=[DataRequired()])
-    submit = SubmitField('submit', render_kw={"value": "Delete"})
-
-class ModifyAccountForm(FlaskForm):
-    username = StringField('username', validators=[DataRequired()])
-    password = StringField('password', validators=[DataRequired()])
-    newPassword = StringField('newPassword', validators=[DataRequired()])
-    submit = SubmitField('submit', render_kw={"value": "Modify"})
-
 class CreateServerForm(FlaskForm):
     serverName = StringField('serverName', validators=[DataRequired()])
-    serverVersion = SelectField('serverVersion', choices=[('1.8.8', '1.8.8'), ('1.9.4', '1.9.4'), ('1.10.2', '1.10.2'), ('1.11.2', '1.11.2'), ('1.12.2', '1.12.2'), ('1.13.2', '1.13.2'), ('1.14.4', '1.14.4'), ('1.15.2', '1.15.2'), ('1.16.5', '1.16.5'), ('1.17.1', '1.17.1'), ('1.18.2', '1.18.2'), ('1.19.3','1.19.3')], validators=[DataRequired()])
+    serverVersion = SelectField('serverVersion', choices=[('1.8.8', '1.8.8'), ('1.9.4', '1.9.4'), ('1.10.2', '1.10.2'), ('1.11.2', '1.11.2'), ('1.12.2', '1.12.2'), ('1.13.2', '1.13.2'), ('1.14.4', '1.14.4'), ('1.15.2', '1.15.2'), ('1.16.5', '1.16.5'), ('1.17.1', '1.17.1'), ('1.18.2', '1.18.2'), ('1.19.4','1.19.4')], validators=[DataRequired()])
     submit = SubmitField('submit', render_kw={"value": "Create"})
-
-class ModifyServerForm(FlaskForm):
-    serverName = StringField('serverName', validators=[DataRequired()])
-    serverVersion = SelectField('serverVersion', choices=[('1.8.8', '1.8.8'), ('1.9.4', '1.9.4'), ('1.10.2', '1.10.2'), ('1.11.2', '1.11.2'), ('1.12.2', '1.12.2'), ('1.13.2', '1.13.2'), ('1.14.4', '1.14.4'), ('1.15.2', '1.15.2'), ('1.16.5', '1.16.5'), ('1.17.1', '1.17.1'), ('1.18.2', '1.18.2'), ('1.19.3','1.19.3')], validators=[DataRequired()])
-    serverGamemode = SelectField('serverGamemode', choices=[('survival', 'survival'), ('creative', 'creative'), ('adventure', 'adventure'), ('spectator', 'spectator')], validators=[DataRequired()])
-    serverDifficulty = SelectField('serverDifficulty', choices=[('peaceful', 'peaceful'), ('easy', 'easy'), ('normal', 'normal'), ('hard', 'hard')], validators=[DataRequired()])
-    serverPVP = SelectField('serverPVP', choices=[('true', 'true'), ('false', 'false')], validators=[DataRequired()])
-    serverWhitelist = SelectField('serverWhitelist', choices=[('true', 'true'), ('false', 'false')], validators=[DataRequired()])
-    serverMaxPlayers = IntegerField('serverMaxPlayers', validators=[DataRequired()])
-    submit = SubmitField('submit', render_kw={"value": "Modify"})
 
 class DeleteServerForm(FlaskForm):
     serverName = StringField('serverName', validators=[DataRequired()])
@@ -389,12 +418,16 @@ def createApp():
 
 def ErrorHandler(e):
     errorCode = e.code
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
+    errorMessage = e.description
     if errorCode == 404:
         flash('Page not found', category='error')
-        return render_template("error.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Error", PageNameLower="error", userAuth=False), 404
+        return render_template("error.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Error", PageNameLower="error", userAuth=userAuth, ErrorMessage=errorMessage, ErrorCode=errorCode), 404
     else:
         flash('An error occured', category='error')
-        return render_template("error.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Error", PageNameLower="error", userAuth=False), 500
+        return render_template("error.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Error", PageNameLower="error", userAuth=userAuth), 500
 
 @app.route('/')
 def index():
@@ -423,13 +456,14 @@ def login():
     userAuth = False
     if current_user.is_authenticated:
         userAuth = True
+        return redirect(url_for('dashboard'))
     if form.validate_on_submit():
-        if jsonAccounts.checkAccount(form.username.data, form.password.data):
-            user = User(form.username.data)
+        if databaseObj.checkUser(form.usernameOrEmail.data, form.password.data):
+            user = User(form.usernameOrEmail.data)
             login_user(user)
             return redirect(url_for('dashboard'))
         else:
-            flash('Invalid username or password', category='error')
+            flash('Invalid username/email or password', category='error')
             return redirect(url_for('login'))
     return render_template('login.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Login", PageNameLower="login", userAuth=userAuth)
 
@@ -446,9 +480,10 @@ def register():
     userAuth = False
     if current_user.is_authenticated:
         userAuth = True
+        return redirect(url_for('dashboard'))
     if form.validate_on_submit():
         if form.confirmPassword.data == form.password.data:
-            if jsonAccounts.addAccount(form.username.data, form.password.data):
+            if databaseObj.addUser(form.username.data, form.email.data, form.password.data):
                 flash('Account created', category='success')
                 return redirect(url_for('login'))
             else:
@@ -465,29 +500,12 @@ def deleteAccount():
     userAuth = False
     if current_user.is_authenticated:
         userAuth = True
-    form = DeleteAccountForm()
-    if form.validate_on_submit():
-        if jsonAccounts.deleteAccount(form.username.data):
-            return redirect(url_for('login'))
-        else:
-            flash('Invalid username or password')
-            return redirect(url_for('deleteAccount'))
-    return render_template('deleteAccount.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Delete Account", PageNameLower="deleteaccount", userAuth=userAuth)
-
-@app.route('/modifyAccount', methods=['GET', 'POST'])
-@login_required
-def modifyAccount():
-    userAuth = False
-    if current_user.is_authenticated:
-        userAuth = True
-    form = ModifyAccountForm()
-    if form.validate_on_submit():
-        if jsonAccounts.modifyAccount(form.username.data, form.newPassword.data):
-            return redirect(url_for('login'))
-        else:
-            flash('Invalid username or password')
-            return redirect(url_for('modifyAccount'))
-    return render_template('modifyAccount.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Modify Account", PageNameLower="modifyaccount", userAuth=userAuth)
+    loggedUser = current_user
+    if userAuth:
+        databaseObj.deleteUser(loggedUser.username)
+        logout_user()
+        flash('Account deleted', category='success')
+        return redirect(url_for('index'))
 
 @app.route('/dashboard')
 @login_required
@@ -496,7 +514,7 @@ def dashboard():
     if current_user.is_authenticated:
         userAuth = True
     loggedUser = current_user
-    userServers = servers.getServerByOwner(loggedUser.username)
+    userServers = databaseObj.getServerByOwner(loggedUser.username)
     return render_template('dashboard.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Dashboard", PageNameLower="dashboard", servers=userServers, loggedUser=loggedUser, userAuth=userAuth)
 
 @app.route('/server/<id>')
@@ -506,7 +524,7 @@ def server(id):
     if current_user.is_authenticated:
         userAuth = True
     loggedUser = current_user
-    server = servers.getServer(id)
+    server = databaseObj.getServer(id)
     if server[2] == loggedUser.username:
         return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", server=server, loggedUser=loggedUser, userAuth=userAuth)
     else:
@@ -521,7 +539,7 @@ def createServer():
         userAuth = True
     form = CreateServerForm()
     if form.validate_on_submit():
-        if servers.addServer(form.serverName.data, current_user.username, form.serverVersion.data, 255565, "/dev/null"):
+        if databaseObj.addServer(form.serverName.data, current_user.username, form.serverVersion.data, 255565, "/dev/null"):
             flash('Server created', category='success')
             return redirect(url_for('dashboard'))
         else:
@@ -532,7 +550,7 @@ def createServer():
 @app.route('/deleteServer/<id>', methods=['GET', 'POST'])
 @login_required
 def deleteServer(id):
-    if servers.deleteServer(id):
+    if databaseObj.deleteServer(id):
         flash('Server deleted', category='success')
         return redirect(url_for('dashboard'))
     else:
@@ -544,11 +562,10 @@ if __name__ == '__main__':
     flaskLog = logging.getLogger('werkzeug')
     flaskLog.disabled = True
     logger = Logger("logs.log",jsonConfig.getConfig("DebugMode"))
-    jsonAccounts = AccountsStorer()
-    jsonAccounts.addAccount('admin', 'admin')
     jsonConfig = Config()
-    servers = Servers("server.db")
+    databaseObj = Database("database.db")
+    databaseObj.addAdmin("admin", "admin@admin.admin", "admin")
     createApp()
-    # buildCss()
+    buildCss()
     app.register_error_handler(404, ErrorHandler)
     app.run(port=5000, debug=False)
