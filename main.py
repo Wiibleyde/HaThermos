@@ -5,6 +5,7 @@ from wtforms import StringField, SelectField, SelectField, SubmitField, Password
 from wtforms.validators import DataRequired
 import json
 import os
+import subprocess
 import hashlib
 import time
 import logging
@@ -404,10 +405,10 @@ class DeleteServerForm(FlaskForm):
 
 def buildCss():
     logger.addDebug("Building CSS : downloading")
-    os.system("npm i --silent")
+    subprocess.run(["npm","i"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     logger.addDebug("Building CSS : downloading... Done")
     logger.addDebug("Building CSS : building")
-    os.system("npx tailwindcss -i ./static/css/input.css -o ./static/css/tailwind.css --silent")
+    subprocess.run(["npx","tailwindcss", "-i", "./static/css/input.css", "-o", "./static/css/tailwind.css"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     logger.addDebug("Building CSS : building... Done")
 
 def createApp():
@@ -417,6 +418,7 @@ def createApp():
     return app
 
 def ErrorHandler(e):
+    logger.addError(f'Error : {e}')
     errorCode = e.code
     userAuth = False
     if current_user.is_authenticated:
@@ -434,6 +436,9 @@ def index():
     userAuth = False
     if current_user.is_authenticated:
         userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the home page')
+    else:
+        logger.addInfo('User is not logged in and going to the home page')
     return render_template("index.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Home", PageNameLower="home", userAuth=userAuth)
 
 @app.route('/about')
@@ -441,6 +446,9 @@ def about():
     userAuth = False
     if current_user.is_authenticated:
         userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the about page')
+    else:
+        logger.addInfo('User is not logged in and going to the about page')
     return render_template("about.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="About", PageNameLower="about", userAuth=userAuth)
 
 @app.route('/contact')
@@ -448,6 +456,9 @@ def contact():
     userAuth = False
     if current_user.is_authenticated:
         userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the contact page')
+    else:
+        logger.addInfo('User is not logged in and going to the contact page')
     return render_template("contact.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Contact", PageNameLower="contact", userAuth=userAuth)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -456,7 +467,10 @@ def login():
     userAuth = False
     if current_user.is_authenticated:
         userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the login page')
         return redirect(url_for('dashboard'))
+    else:
+        logger.addInfo('User is not logged in and going to the login page')
     if form.validate_on_submit():
         if databaseObj.checkUser(form.usernameOrEmail.data, form.password.data):
             user = User(form.usernameOrEmail.data)
@@ -470,6 +484,7 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+    logger.addInfo(f'User {current_user.username} logged out')
     logout_user()
     flash('Logged out', category='success')
     return redirect(url_for('index'))
@@ -480,7 +495,10 @@ def register():
     userAuth = False
     if current_user.is_authenticated:
         userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the register page')
         return redirect(url_for('dashboard'))
+    else:
+        logger.addInfo('User is not logged in and going to the register page')
     if form.validate_on_submit():
         if form.confirmPassword.data == form.password.data:
             if databaseObj.addUser(form.username.data, form.email.data, form.password.data):
@@ -500,6 +518,9 @@ def deleteAccount():
     userAuth = False
     if current_user.is_authenticated:
         userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the delete account page')
+    else:
+        logger.addInfo('User is not logged in and going to the delete account page')
     loggedUser = current_user
     if userAuth:
         databaseObj.deleteUser(loggedUser.username)
@@ -513,6 +534,9 @@ def dashboard():
     userAuth = False
     if current_user.is_authenticated:
         userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the dashboard page')
+    else:
+        logger.addInfo('User is not logged in and going to the dashboard page')
     loggedUser = current_user
     userServers = databaseObj.getServerByOwner(loggedUser.username)
     return render_template('dashboard.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Dashboard", PageNameLower="dashboard", servers=userServers, loggedUser=loggedUser, userAuth=userAuth)
@@ -523,6 +547,9 @@ def server(id):
     userAuth = False
     if current_user.is_authenticated:
         userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the server page')
+    else:
+        logger.addInfo('User is not logged in and going to the server page')
     loggedUser = current_user
     server = databaseObj.getServer(id)
     if server[2] == loggedUser.username:
@@ -537,6 +564,9 @@ def createServer():
     userAuth = False
     if current_user.is_authenticated:
         userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the create server page')
+    else:
+        logger.addInfo('User is not logged in and going to the create server page')
     form = CreateServerForm()
     if form.validate_on_submit():
         if databaseObj.addServer(form.serverName.data, current_user.username, form.serverVersion.data, 255565, "/dev/null"):
@@ -550,6 +580,12 @@ def createServer():
 @app.route('/deleteServer/<id>', methods=['GET', 'POST'])
 @login_required
 def deleteServer(id):
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the delete server page')
+    else:
+        logger.addInfo('User is not logged in and going to the delete server page')
     if databaseObj.deleteServer(id):
         flash('Server deleted', category='success')
         return redirect(url_for('dashboard'))
@@ -562,10 +598,11 @@ if __name__ == '__main__':
     flaskLog = logging.getLogger('werkzeug')
     flaskLog.disabled = True
     logger = Logger("logs.log",jsonConfig.getConfig("DebugMode"))
-    jsonConfig = Config()
+    logger.addInfo("Starting server...")
     databaseObj = Database("database.db")
-    databaseObj.addAdmin("admin", "admin@admin.admin", "admin")
+    logger.addInfo("Database loaded")
     createApp()
     buildCss()
+    logger.addInfo("CSS built, starting server...")
     app.register_error_handler(404, ErrorHandler)
     app.run(port=5000, debug=False)
