@@ -3,6 +3,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, SelectField, SubmitField, PasswordField, BooleanField, IntegerField
 from wtforms.validators import DataRequired
+import flask.cli
 import json
 import os
 import subprocess
@@ -597,10 +598,11 @@ if __name__ == '__main__':
     jsonConfig = Config()
     flaskLog = logging.getLogger('werkzeug')
     flaskLog.disabled = True
+    flask.cli.show_server_banner = lambda *args: None
     logger = Logger("logs.log",jsonConfig.getConfig("DebugMode"))
-    logger.addInfo("Starting server...")
+    logger.addInfo("Starting program...")
     databaseObj = Database("database.db")
-    logger.addInfo("Database loaded")
+    logger.addInfo("Database loaded, building CSS...")
     createApp()
     buildCss()
     logger.addInfo("CSS built, starting server...")
