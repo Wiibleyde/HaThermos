@@ -12,6 +12,7 @@ import time
 import logging
 import sqlite3
 import logging
+import argparse
 
 # ==============================================================================
 # Environment variables 
@@ -350,7 +351,7 @@ class Config:
     def __init__(self):
         self.fileName = 'serversConfig.json'
         if not os.path.exists(self.fileName):
-            self.config = {"ProjectName":"HaThermos","DebugMode":True}
+            self.config = {"ProjectName":"HaThermos"}
             self.createFile()
             print('Config file created')
         else:
@@ -411,6 +412,15 @@ def buildCss():
     logger.addDebug("Building CSS : building")
     subprocess.run(["npx","tailwindcss", "-i", "./static/css/input.css", "-o", "./static/css/tailwind.css"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     logger.addDebug("Building CSS : building... Done")
+
+def parseArgs():
+    parser = argparse.ArgumentParser(description="HaThermos Web Panel")
+    parser.add_argument('--debug', action='store_true', help='Enable debug mode')
+    args = parser.parse_args()
+    if args.debug:
+        return True
+    else:
+        return False
 
 def createApp():
     logger.addDebug("Creating app...")
@@ -595,11 +605,12 @@ def deleteServer(id):
         return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
+    debugBool = parseArgs()
     jsonConfig = Config()
     flaskLog = logging.getLogger('werkzeug')
     flaskLog.disabled = True
     flask.cli.show_server_banner = lambda *args: None
-    logger = Logger("logs.log",jsonConfig.getConfig("DebugMode"))
+    logger = Logger("logs.log",debugMode=debugBool)
     logger.addInfo("Starting program...")
     databaseObj = Database("database.db")
     logger.addInfo("Database loaded, building CSS...")
