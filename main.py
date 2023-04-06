@@ -393,15 +393,21 @@ def ErrorHandler(e):
     
 def createDocker(version, name):
     logger.addDebug(f"Creating docker {name}...")
-    image, logs = client.images.build(path=f"./data/server/{version}", tag=f"minecraft/{name}:latest")
-    logger.addDebug(f"Creating docker {name}... Done")
-    return image
+    try:
+        image, logs = client.images.build(path=f"./data/server/{version}", tag=f"minecraft/{name}:latest")
+        logger.addDebug(f"Creating docker {name}... Done")
+        return image
+    except Exception as e:
+        logger.addError(f"Error creating docker {name}: {e}")
 
 def startDocker(image, name, port):
     logger.addDebug(f"Starting docker {name}...")
-    container = client.containers.run(image, detach=True, ports={25565: port}, name=f"minecraft/{name}:latest")
-    logger.addDebug(f"Starting docker {name}... Done")
-    return container
+    try:
+        container = client.containers.run(image, detach=True, ports={25565: port}, name=f"{name}", remove=True)
+        logger.addDebug(f"Starting docker {name}... Done")
+        return container
+    except Exception as e:
+        logger.addError(f"Error starting docker {name}: {e}")
 
 @app.route('/')
 def index():
