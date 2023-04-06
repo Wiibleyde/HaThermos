@@ -393,34 +393,14 @@ def ErrorHandler(e):
     
 def createDocker(version, name):
     logger.addDebug(f"Creating docker {name}...")
-    image, logs = client.images.build(path=f"./data/server/{version}", tag=f"minecraft:{name}")
+    image, logs = client.images.build(path=f"./data/server/{version}", tag=f"minecraft/{name}:latest")
     logger.addDebug(f"Creating docker {name}... Done")
     return image
 
-def deleteDocker(name):
-    logger.addDebug(f"Deleting docker {name}...")
-    client.images.remove(f"minecraft:{name}")
-    logger.addDebug(f"Deleting docker {name}... Done")
-    return True
-
-def startDocker(name, port):
+def startDocker(image, name, port):
     logger.addDebug(f"Starting docker {name}...")
-    container = client.containers.run(f"minecraft:{name}", detach=True, ports={f"{port}/tcp": port}, name=f"minecraft:{name}")
+    container = client.containers.run(image, detach=True, ports={25565: port}, name=f"minecraft/{name}:latest")
     logger.addDebug(f"Starting docker {name}... Done")
-    return container
-
-def stopDocker(name):
-    logger.addDebug(f"Stopping docker {name}...")
-    container = client.containers.get(f"minecraft:{name}")
-    container.stop()
-    logger.addDebug(f"Stopping docker {name}... Done")
-    return container
-
-def pauseDocker(name):
-    logger.addDebug(f"Pausing docker {name}...")
-    container = client.containers.get(f"minecraft:{name}")
-    container.pause()
-    logger.addDebug(f"Pausing docker {name}... Done")
     return container
 
 @app.route('/')
