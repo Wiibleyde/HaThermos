@@ -13,6 +13,7 @@ import logging
 import sqlite3
 import logging
 import argparse
+import docker
 
 # ==============================================================================
 # Environment variables 
@@ -20,6 +21,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ceciestunsecret'
 login_manager=LoginManager()
 login_manager.init_app(app)
+client = docker.from_env()
 # ==============================================================================
 
 class User(UserMixin):
@@ -391,33 +393,39 @@ def ErrorHandler(e):
     
 def createDocker(version, name):
     logger.addDebug(f"Creating docker {name}...")
-    subprocess.run(["docker", "build", "-t", f"minecraft:{name}", f"./data/server/{version}"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    image, logs = client.images.build(path=f"./data/server/{version}", tag=f"minecraft:{name}")
+    if logs:
+        for log in logs:
+            if log['stream']:
+                logger.addDebug(log['stream'])
     logger.addDebug(f"Creating docker {name}... Done")
-    return True
+    return image
 
 def deleteDocker(name):
     logger.addDebug(f"Deleting docker {name}...")
-    subprocess.run(["docker", "rmi", f"minecraft:{name}"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    client.images.remove(f"minecraft:{name}")
     logger.addDebug(f"Deleting docker {name}... Done")
     return True
 
-def startDocker(name):
+def startDocker(name, port):
     logger.addDebug(f"Starting docker {name}...")
-    subprocess.run(["docker", "run", "-d", "-p", "25565:25565", f"minecraft:{name}"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    container = client.containers.run(f"minecraft:{name}", detach=True, ports={f"{port}/tcp": port}, name=f"minecraft:{name}")
     logger.addDebug(f"Starting docker {name}... Done")
-    return True
+    return container
 
 def stopDocker(name):
     logger.addDebug(f"Stopping docker {name}...")
-    subprocess.run(["docker", "stop", f"minecraft:{name}"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    container = client.containers.get(f"minecraft:{name}")
+    container.stop()
     logger.addDebug(f"Stopping docker {name}... Done")
-    return True
+    return container
 
 def pauseDocker(name):
     logger.addDebug(f"Pausing docker {name}...")
-    subprocess.run(["docker", "pause", f"minecraft:{name}"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    container = client.containers.get(f"minecraft:{name}")
+    container.pause()
     logger.addDebug(f"Pausing docker {name}... Done")
-    return True
+    return container
 
 @app.route('/')
 def index():
