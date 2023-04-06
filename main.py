@@ -615,4 +615,4 @@ if __name__ == '__main__':
     createDocker("1.8.8","testServer")
     startDocker("testServer")
     app.register_error_handler(404, ErrorHandler)
-    app.run(port=5000, debug=False)
+    app.run(port=8090, debug=False)
