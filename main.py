@@ -293,59 +293,6 @@ class Database:
             return user
         else:
             return False
-        
-class DockerUtil:
-    def buildServer(self,name,version):
-        # path : data/server/version then run dockerfile
-        if not os.path.exists(f'data/server/{version}'):
-            logger.addWarning(f'Build server {version} failed : Server folder not found')
-            return False
-        elif not os.path.exists(f'data/server/{version}/Dockerfile'):
-            logger.addWarning(f'Build server {version} failed : Dockerfile not found')
-            return False
-        else:
-            # docker with same name and user exist
-            if self.testIfExist():
-                logger.addWarning(f'Build server {version} failed : Server already exist')
-                return False
-            else:
-                # build docker
-                os.system(f'docker build -t {name} data/server/{version}')
-                logger.addInfo(f'Server {version} built')
-                return True
-            
-    def startServer(self,name,version):
-        if self.testIfExist():
-            os.system(f'docker start {name}')
-            logger.addInfo(f'Server {version} started')
-            return True
-        else:
-            logger.addWarning(f'Start server {version} failed : Server not exist')
-            return False
-        
-    def stopServer(self,name,version):
-        if self.testIfExist():
-            os.system(f'docker stop {name}')
-            logger.addInfo(f'Server {version} stopped')
-            return True
-        else:
-            logger.addWarning(f'Stop server {version} failed : Server not exist')
-            return False
-        
-    def deleteServer(self,name,version):
-        if self.testIfExist():
-            os.system(f'docker rm {name}')
-            logger.addInfo(f'Server {version} deleted')
-            return True
-        else:
-            logger.addWarning(f'Delete server {version} failed : Server not exist')
-            return False
-        
-    def testIfExist(self,name):
-        if os.system(f'docker ps -a | grep {name}') == 0:
-            return True
-        else:
-            return False
 
 class Config:
     def __init__(self):
@@ -441,6 +388,36 @@ def ErrorHandler(e):
     else:
         flash('An error occured', category='error')
         return render_template("error.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Error", PageNameLower="error", userAuth=userAuth), 500
+    
+def createDocker(version, name):
+    logger.addDebug(f"Creating docker {name}...")
+    subprocess.run(["docker", "build", "-t", f"minecraft:{name}", f"./data/server/{version}"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    logger.addDebug(f"Creating docker {name}... Done")
+    return True
+
+def deleteDocker(name):
+    logger.addDebug(f"Deleting docker {name}...")
+    subprocess.run(["docker", "rmi", f"minecraft:{name}"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    logger.addDebug(f"Deleting docker {name}... Done")
+    return True
+
+def startDocker(name):
+    logger.addDebug(f"Starting docker {name}...")
+    subprocess.run(["docker", "run", "-d", "-p", "25565:25565", f"minecraft:{name}"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    logger.addDebug(f"Starting docker {name}... Done")
+    return True
+
+def stopDocker(name):
+    logger.addDebug(f"Stopping docker {name}...")
+    subprocess.run(["docker", "stop", f"minecraft:{name}"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    logger.addDebug(f"Stopping docker {name}... Done")
+    return True
+
+def pauseDocker(name):
+    logger.addDebug(f"Pausing docker {name}...")
+    subprocess.run(["docker", "pause", f"minecraft:{name}"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    logger.addDebug(f"Pausing docker {name}... Done")
+    return True
 
 @app.route('/')
 def index():
@@ -603,6 +580,16 @@ def deleteServer(id):
     else:
         flash('Invalid server', category='error')
         return redirect(url_for('dashboard'))
+    
+@app.route('/startServer/<id>', methods=['GET', 'POST'])
+@login_required
+def startServer(id):
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the start server page')
+    else:
+        logger.addInfo('User is not logged in and going to the start server page')
 
 if __name__ == '__main__':
     debugBool = parseArgs()
@@ -617,5 +604,7 @@ if __name__ == '__main__':
     createApp()
     buildCss()
     logger.addInfo("CSS built, starting server...")
+    createDocker("1.8.8","testServer")
+    startDocker("testServer")
     app.register_error_handler(404, ErrorHandler)
     app.run(port=5000, debug=False)
