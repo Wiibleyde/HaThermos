@@ -594,7 +594,5 @@ if __name__ == '__main__':
     createApp()
     buildCss()
     logger.addInfo("CSS built, starting server...")
-    image=createDocker("1.8.8","testserver")
-    startDocker(image,"testserver",25565)
     app.register_error_handler(404, ErrorHandler)
     app.run(port=8090, debug=False)
