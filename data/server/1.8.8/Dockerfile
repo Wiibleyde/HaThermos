@@ -3,7 +3,8 @@ FROM openjdk:8
 WORKDIR /minecraft
 
 COPY vanilla-1.8.8.jar .
-COPY data/eula.txt .
+COPY data/server/eula.txt .
+COPY server.properties .
 
 CMD ["java", "-Xms1G", "-Xmx1G", "-jar", "vanilla-1.8.8.jar", "nogui"]
 
