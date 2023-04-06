@@ -609,6 +609,6 @@ if __name__ == '__main__':
     buildCss()
     logger.addInfo("CSS built, starting server...")
     createDocker("1.8.8","testServer")
-    startDocker("testServer")
+    startDocker("testServer",25565)
     app.register_error_handler(404, ErrorHandler)
     app.run(port=8090, debug=False)
