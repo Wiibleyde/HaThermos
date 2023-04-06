@@ -394,10 +394,6 @@ def ErrorHandler(e):
 def createDocker(version, name):
     logger.addDebug(f"Creating docker {name}...")
     image, logs = client.images.build(path=f"./data/server/{version}", tag=f"minecraft:{name}")
-    if logs:
-        for log in logs:
-            if log['stream']:
-                logger.addDebug(log['stream'])
     logger.addDebug(f"Creating docker {name}... Done")
     return image
 
