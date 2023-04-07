@@ -599,7 +599,9 @@ def deleteServer(id):
         logger.addInfo(f'User {current_user.username} is logged in and going to the delete server page')
     else:
         logger.addInfo('User is not logged in and going to the delete server page')
+    serverName = databaseObj.getServer(id)[1]
     if databaseObj.deleteServer(id):
+        deleteDocker(serverName)
         flash('Server deleted', category='success')
         return redirect(url_for('dashboard'))
     else:
