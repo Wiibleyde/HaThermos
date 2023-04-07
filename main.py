@@ -433,7 +433,7 @@ def startDocker(image, name, port):
 def deleteDocker(name):
     logger.addDebug(f"Deleting docker {name}...")
     try:
-        container = client.containers.get(f"minecraft/{name}")
+        container = client.containers.get(f"minecraft/{name}:latest")
         container.stop()
         container.remove()
         logger.addDebug(f"Deleting docker {name}... Done")
