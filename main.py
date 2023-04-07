@@ -424,9 +424,9 @@ def createDocker(version, name):
 def getContainerIdByName(name):
     logger.addDebug(f"Getting container id of {name}...")
     try:
-        container = client.containers.get(f"minecraft/{name}:latest")
+        container = client.containers.list(filters={"name": f"minecraft/{name}"})
         logger.addDebug(f"Getting container id of {name}... Done")
-        return container.id
+        return container[0].id
     except Exception as e:
         logger.addError(f"Error getting container id of {name}: {e}")
 
