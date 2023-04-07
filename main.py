@@ -365,7 +365,7 @@ def buildCss():
 
 def parseArgs():
     parser = argparse.ArgumentParser(description="HaThermos Web Panel")
-    parser.add_argument('--debug', action='store_true', help='Enable debug mode')
+    parser.add_argument('-d','--debug', action='store_true', help='Enable debug mode')
     args = parser.parse_args()
     if args.debug:
         return True
@@ -375,11 +375,22 @@ def parseArgs():
 def checkMinecraftUsername(username):
     url = "https://api.minetools.eu/uuid/" + username
     response = requests.get(url)
+    logger.addDebug(f'Checking username : {response.status_code}')
     if response.status_code == 200:
-        if response.json()['id'] != None:
-            return True
-        else:
+        logger.addDebug(f'Checking username : {response.json()}')
+        try:
+            if response.json()['id'] == "null":
+                logger.addDebug(f'Checking username : {username} not found')
+                return False
+            else:
+                logger.addDebug(f'Checking username : {username} found')
+                return True
+        except:
+            logger.addDebug(f'Checking username : {username} not found')
             return False
+    else:
+        logger.addError(f'Error while checking username : {response.status_code}')
+        return False
 
 def createApp():
     logger.addDebug("Creating app...")
@@ -499,7 +510,7 @@ def register():
         logger.addInfo('User is not logged in and going to the register page')
     if form.validate_on_submit():
         if form.confirmPassword.data == form.password.data:
-            if checkMinecraftUsername(form.username.data):
+            if not checkMinecraftUsername(form.username.data):
                 flash('Invalid username, please enter you Minecraft username', category='error')
                 return redirect(url_for('register'))
             if databaseObj.addUser(form.username.data, form.email.data, form.password.data):

@@ -28,6 +28,7 @@
                         <div class="flex flex-col items-center justify-center text-black my-1">
                             {{ form.email }}
                         </div>
+                        <div id="emailMessage" class="flex flex-col items-center justify-center my-1"></div>
                         <div class="flex flex-col items-center justify-center text-black my-1">
                             {{ form.password }}
                         </div>
@@ -81,7 +82,6 @@
             }
             try {
                 url = "https://api.minetools.eu/uuid/" + username
-                // if "id" is not null then the username is valid and exists and don't let the user register with it
                 fetch(url)
                 .then(response => response.json())
                 .then(data => {
@@ -103,11 +103,29 @@
             }
         }
 
+        function checkEmail(email) {
+            if (email == "") {
+                document.getElementById("emailMessage").innerHTML = ""
+                return
+            }
+            if (email.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g)) {
+                document.getElementById("email").classList.remove("border-red-500")
+                document.getElementById("emailMessage").innerHTML = "Email is valid"
+                document.getElementById("emailMessage").classList.remove("text-red-500")
+                document.getElementById("emailMessage").classList.add("text-green-500")
+                return true
+            } else {
+                document.getElementById("email").classList.add("border-red-500")
+                document.getElementById("emailMessage").innerHTML = "Email is not valid"
+                document.getElementById("emailMessage").classList.add("text-red-500")
+                return false
+            }
+        }
+
         document.getElementById("password").addEventListener("keyup",checkPasswordMatch)
         document.getElementById("confirmPassword").addEventListener("keyup",checkPasswordMatch)
-        document.getElementById("username").addEventListener("change",function() {
-            checkMinecraftUsername(this.value)
-        })
+        document.getElementById("username").addEventListener("keyup",function() {checkMinecraftUsername(this.value)})
+        document.getElementById("email").addEventListener("keyup",function() {checkEmail(this.value)})
     </script>
     <footer>
         {% include "fragments/footer.html" %}
