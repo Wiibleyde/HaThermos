@@ -373,12 +373,13 @@ def parseArgs():
         return False
     
 def checkMinecraftUsername(username):
-    url = "https://api.mojang.com/users/profiles/minecraft/"+username
+    url = "https://api.minetools.eu/uuid/" + username
     response = requests.get(url)
     if response.status_code == 200:
-        return True
-    else:
-        return False
+        if response.json()['id'] != None:
+            return True
+        else:
+            return False
 
 def createApp():
     logger.addDebug("Creating app...")
@@ -417,6 +418,16 @@ def startDocker(image, name, port):
         return container
     except Exception as e:
         logger.addError(f"Error starting docker {name}: {e}")
+
+def deleteDocker(name):
+    logger.addDebug(f"Deleting docker {name}...")
+    try:
+        container = client.containers.get(f"{name}")
+        container.stop()
+        container.remove()
+        logger.addDebug(f"Deleting docker {name}... Done")
+    except Exception as e:
+        logger.addError(f"Error deleting docker {name}: {e}")
 
 @app.route('/')
 def index():
@@ -560,6 +571,7 @@ def createServer():
     form = CreateServerForm()
     if form.validate_on_submit():
         if databaseObj.addServer(form.serverName.data, current_user.username, form.serverVersion.data, 255565, "/dev/null"):
+            createDocker(form.serverVersion.data, form.serverName.data)
             flash('Server created', category='success')
             return redirect(url_for('dashboard'))
         else:
