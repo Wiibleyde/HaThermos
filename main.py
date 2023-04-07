@@ -421,6 +421,15 @@ def createDocker(version, name):
     except Exception as e:
         logger.addError(f"Error creating docker {name}: {e}")
 
+def getContainerIdByName(name):
+    logger.addDebug(f"Getting container id of {name}...")
+    try:
+        container = client.containers.get(f"minecraft/{name}:latest")
+        logger.addDebug(f"Getting container id of {name}... Done")
+        return container.id
+    except Exception as e:
+        logger.addError(f"Error getting container id of {name}: {e}")
+
 def startDocker(image, name, port):
     logger.addDebug(f"Starting docker {name}...")
     try:
@@ -433,7 +442,7 @@ def startDocker(image, name, port):
 def deleteDocker(name):
     logger.addDebug(f"Deleting docker {name}...")
     try:
-        container = client.containers.get(f"minecraft/{name}:latest")
+        container = client.containers.get(getContainerIdByName(name))
         container.stop()
         container.remove()
         logger.addDebug(f"Deleting docker {name}... Done")
