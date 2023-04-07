@@ -14,6 +14,7 @@ import sqlite3
 import logging
 import argparse
 import docker
+import requests
 
 # ==============================================================================
 # Environment variables 
@@ -370,6 +371,14 @@ def parseArgs():
         return True
     else:
         return False
+    
+def checkMinecraftUsername(username):
+    url = "https://api.mojang.com/users/profiles/minecraft/"+username
+    response = requests.get(url)
+    if response.status_code == 200:
+        return True
+    else:
+        return False
 
 def createApp():
     logger.addDebug("Creating app...")
@@ -479,6 +488,9 @@ def register():
         logger.addInfo('User is not logged in and going to the register page')
     if form.validate_on_submit():
         if form.confirmPassword.data == form.password.data:
+            if checkMinecraftUsername(form.username.data):
+                flash('Invalid username, please enter you Minecraft username', category='error')
+                return redirect(url_for('register'))
             if databaseObj.addUser(form.username.data, form.email.data, form.password.data):
                 flash('Account created', category='success')
                 return redirect(url_for('login'))

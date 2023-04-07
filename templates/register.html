@@ -19,11 +19,12 @@
             <div class="flex flex-col items-center justify-center mt-52">
                 <p class="text-2xl font-bold">Register</p>
                 {% block content %}
-                    <form method="post" class="flex flex-col items-center justify-center ">
+                    <form method="post" class="flex flex-col items-center justify-center">
                         {{ form.hidden_tag() }}
                         <div class="flex flex-col items-center justify-center text-black my-1">
                             {{ form.username }}
                         </div>
+                        <div id="usernameMessage" class="flex flex-col items-center justify-center my-1"></div>
                         <div class="flex flex-col items-center justify-center text-black my-1">
                             {{ form.email }}
                         </div>
@@ -73,8 +74,40 @@
             }
         }
 
+        function checkMinecraftUsername(username) {
+            if (username == "") {
+                document.getElementById("usernameMessage").innerHTML = ""
+                return
+            }
+            try {
+                url = "https://api.minetools.eu/uuid/" + username
+                // if "id" is not null then the username is valid and exists and don't let the user register with it
+                fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.id != null) {
+                        document.getElementById("username").classList.remove("border-red-500")
+                        document.getElementById("usernameMessage").innerHTML = "Username is your Minecraft username"
+                        document.getElementById("usernameMessage").classList.remove("text-red-500")
+                        document.getElementById("usernameMessage").classList.add("text-green-500")
+                        return true
+                    } else {
+                        document.getElementById("username").classList.add("border-red-500")
+                        document.getElementById("usernameMessage").innerHTML = "Username is not your Minecraft username"
+                        document.getElementById("usernameMessage").classList.add("text-red-500")
+                        return false
+                    }
+                })
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
         document.getElementById("password").addEventListener("keyup",checkPasswordMatch)
         document.getElementById("confirmPassword").addEventListener("keyup",checkPasswordMatch)
+        document.getElementById("username").addEventListener("change",function() {
+            checkMinecraftUsername(this.value)
+        })
     </script>
     <footer>
         {% include "fragments/footer.html" %}
