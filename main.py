@@ -424,7 +424,7 @@ def createDocker(version, name):
 def startDocker(image, name, port):
     logger.addDebug(f"Starting docker {name}...")
     try:
-        container = client.containers.run(image, detach=True, ports={25565: port}, name=f"minecraft/{name}:latest", remove=True)
+        container = client.containers.run(image, detach=True, ports={25565: port}, name=f"minecraft/{name}", remove=True)
         logger.addDebug(f"Starting docker {name}... Done")
         return container
     except Exception as e:
@@ -433,7 +433,7 @@ def startDocker(image, name, port):
 def deleteDocker(name):
     logger.addDebug(f"Deleting docker {name}...")
     try:
-        container = client.containers.get(f"minecraft/{name}:latest")
+        container = client.containers.get(f"minecraft/{name}")
         container.stop()
         container.remove()
         logger.addDebug(f"Deleting docker {name}... Done")
