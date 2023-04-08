@@ -647,4 +647,4 @@ if __name__ == '__main__':
     buildCss()
     logger.addInfo("CSS built, starting server...")
     app.register_error_handler(404, ErrorHandler)
-    app.run(port=8090, debug=False)
+    app.run(port=8090, debug=False,host='0.0.0.0')
