@@ -13,6 +13,7 @@ from services.database import Database
 from services.flaskform import LoginForm, RegisterForm, CreateServerForm, DeleteServerForm
 from services.config import Config
 from services.logger import Logger
+from services.ports import Ports
 
 # ==============================================================================
 # Environment variables 
@@ -72,6 +73,27 @@ def checkMinecraftUsername(username):
     else:
         logger.addError(f'Error while checking username : {response.status_code}')
         return False
+    
+def startDocker(version, id, port):
+    logger.addDebug(f"Starting docker {id}...")
+    try:
+        container = client.containers.run(image=f"itzg/minecraft-server", detach=True, ports={25565: port}, volumes=f"/srv/minecraft-data/{id}:/data", environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G"], name=f"{id}hathermos")
+        logger.addDebug(f"Starting docker {id}... Done")
+        return container
+    except Exception as e:
+        logger.addError(f"Error starting docker {id}: {e}")
+        return False
+
+def stopDocker(id):
+    logger.addDebug(f"Stopping docker {id}...")
+    try:
+        container = client.containers.get(f"{id}hathermos")
+        container.stop()
+        logger.addDebug(f"Stopping docker {id}... Done")
+        return True
+    except Exception as e:
+        logger.addError(f"Error stopping docker {id}: {e}")
+        return False
 
 def createApp():
     logger.addDebug("Creating app...")
@@ -92,49 +114,6 @@ def ErrorHandler(e):
     else:
         flash('An error occured', category='error')
         return render_template("error.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Error", PageNameLower="error", userAuth=userAuth), 500
-    
-def createDocker(version, name):
-    logger.addDebug(f"Creating docker {name}...")
-    try:
-        image, logs = client.images.build(path=f"./data/server/{version}", tag=f"minecraft/{name}:latest")
-        logger.addDebug(f"Creating docker {name}... Done")
-        return image
-    except Exception as e:
-        logger.addError(f"Error creating docker {name}: {e}")
-
-def getContainerIdByName(name):
-    logger.addDebug(f"Getting container id of {name}...")
-    try:
-        container = client.containers.list()
-        for i in container:
-            if i.image == f"minecraft/{name}":
-                logger.addDebug(f"Getting container id of {name}... Done")
-                return i.id
-        logger.addDebug(f"Getting container id of {name}... Done")
-        return container[0].id
-    except Exception as e:
-        logger.addError(f"Error getting container id of {name}: {e}")
-
-def startDocker(image, name, port):
-    logger.addDebug(f"Starting docker {name}...")
-    try:
-        container = client.containers.run(image, detach=True, ports={25565: port}, image=f"minecraft/{name}:latest", name=f"{name}",volume=f"{name}:/data")
-        logger.addDebug(f"Starting docker {name}... Done")
-        return container
-    except Exception as e:
-        logger.addError(f"Error starting docker {name}: {e}")
-
-def deleteDocker(name):
-    logger.addDebug(f"Deleting docker {name}...")
-    try:
-        id = getContainerIdByName(name)
-        logger.addDebug(f"Deleting docker {id}... Done")
-        container = client.containers.get(id)
-        container.stop()
-        container.remove()
-        logger.addDebug(f"Deleting docker {name}... Done")
-    except Exception as e:
-        logger.addError(f"Error deleting docker {name}: {e}")
 
 @app.route('/')
 def index():
@@ -277,8 +256,7 @@ def createServer():
         logger.addInfo('User is not logged in and going to the create server page')
     form = CreateServerForm()
     if form.validate_on_submit():
-        if databaseObj.addServer(form.serverName.data, current_user.username, form.serverVersion.data, 255565, "/dev/null"):
-            createDocker(form.serverVersion.data, form.serverName.data)
+        if databaseObj.addServer(form.serverName.data, current_user.username, form.serverVersion.data):
             flash('Server created', category='success')
             return redirect(url_for('dashboard'))
         else:
@@ -297,7 +275,6 @@ def deleteServer(id):
         logger.addInfo('User is not logged in and going to the delete server page')
     serverName = databaseObj.getServer(id)[1]
     if databaseObj.deleteServer(id):
-        deleteDocker(serverName)
         flash('Server deleted', category='success')
         return redirect(url_for('dashboard'))
     else:
@@ -313,6 +290,15 @@ def startServer(id):
         logger.addInfo(f'User {current_user.username} is logged in and going to the start server page')
     else:
         logger.addInfo('User is not logged in and going to the start server page')
+    serverId = databaseObj.getServer(id)[0]
+    portToOpen = port.getFreePorts()
+    if startDocker(id=serverId,port=portToOpen,version=databaseObj.getServer(id)[3]):
+        port.addPort(portToOpen)
+        flash('Server started', category='success')
+        return redirect(url_for('dashboard'))
+    else:
+        flash('Invalid server', category='error')
+        return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     debugBool = parseArgs()
@@ -322,7 +308,11 @@ if __name__ == '__main__':
     flask.cli.show_server_banner = lambda *args: None
     logger = Logger("logs.log",debugMode=debugBool)
     logger.addInfo("Starting program...")
+    logger.addInfo("Loading config...")
+    port = Ports("ports.json")
+    logger.addInfo("Ports loaded, loading database...")
     databaseObj = Database("database.db")
+    # databaseObj.addAdmin("Wiibleyde","nathan@bonnell.fr","WiiBleyde33!")
     logger.addInfo("Database loaded, building CSS...")
     createApp()
     buildCss()

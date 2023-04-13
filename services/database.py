@@ -10,17 +10,17 @@ class Database:
     def createDatabase(self):
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
-        c.execute('CREATE TABLE IF NOT EXISTS servers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, owner TEXT, serverVersion TEXT, serverPort INTEGER, serverPath TEXT)')
+        c.execute('CREATE TABLE IF NOT EXISTS servers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, owner TEXT, serverVersion TEXT)')
         c.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, email TEXT, password TEXT, admin BOOLEAN)')
         conn.commit()
         conn.close()
 
-    def addServer(self, name, owner, serverVersion, serverPort, serverPath):
+    def addServer(self, name, owner, serverVersion):
         if self.testIfExist(name,owner):
             return False
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
-        c.execute('INSERT INTO servers (name, owner, serverVersion, serverPort, serverPath) VALUES (?, ?, ?, ?, ?)', (name, owner, serverVersion, serverPort, serverPath))
+        c.execute('INSERT INTO servers (name, owner, serverVersion) VALUES (?, ?, ?)', (name, owner, serverVersion))
         conn.commit()
         conn.close()
         return True
@@ -76,22 +76,6 @@ class Database:
         c = conn.cursor()
         c.execute('SELECT * FROM servers WHERE owner = ?', (owner,))
         server = c.fetchall()
-        conn.close()
-        return server
-    
-    def getServerByPort(self, port):
-        conn = sqlite3.connect(self.fileName)
-        c = conn.cursor()
-        c.execute('SELECT * FROM servers WHERE serverPort = ?', (port,))
-        server = c.fetchone()
-        conn.close()
-        return server
-    
-    def getServerByPath(self, path):
-        conn = sqlite3.connect(self.fileName)
-        c = conn.cursor()
-        c.execute('SELECT * FROM servers WHERE serverPath = ?', (path,))
-        server = c.fetchone()
         conn.close()
         return server
     
