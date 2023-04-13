@@ -77,7 +77,7 @@ def checkMinecraftUsername(username):
 def startDocker(version, id, port):
     logger.addDebug(f"Starting docker {id}...")
     try:
-        container = client.containers.run(image=f"itzg/minecraft-server", detach=True, ports={25565: port}, volumes=f"/srv/minecraft-data/{id}:/data", environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G"], name=f"{id}hathermos")
+        container = client.containers.run(image=f"itzg/minecraft-server", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G"], name=f"{id}hathermos", volumes={f"/srv/minecraft-data/{id}":"/data"})
         logger.addDebug(f"Starting docker {id}... Done")
         return container
     except Exception as e:

@@ -140,6 +140,7 @@ node_modules/
 accounts.json
 serversConfig.json
 serverList.json
+ports.json
 *.db
 
 # tailwind css
