@@ -9,10 +9,10 @@ import docker
 import requests
 
 # file import  
-import database
-import flaskform
-import config
-import logger
+from services.database import Database
+from services.flaskform import LoginForm, RegisterForm, CreateServerForm, DeleteServerForm
+from services.config import Config
+from services.logger import Logger
 
 # ==============================================================================
 # Environment variables 
@@ -168,7 +168,7 @@ def contact():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    form = flaskform.LoginForm()
+    form = LoginForm()
     userAuth = False
     if current_user.is_authenticated:
         userAuth = True
@@ -196,7 +196,7 @@ def logout():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    form = flaskform.RegisterForm()
+    form = RegisterForm()
     userAuth = False
     if current_user.is_authenticated:
         userAuth = True
@@ -275,7 +275,7 @@ def createServer():
         logger.addInfo(f'User {current_user.username} is logged in and going to the create server page')
     else:
         logger.addInfo('User is not logged in and going to the create server page')
-    form = flaskform.CreateServerForm()
+    form = CreateServerForm()
     if form.validate_on_submit():
         if databaseObj.addServer(form.serverName.data, current_user.username, form.serverVersion.data, 255565, "/dev/null"):
             createDocker(form.serverVersion.data, form.serverName.data)
@@ -316,13 +316,13 @@ def startServer(id):
 
 if __name__ == '__main__':
     debugBool = parseArgs()
-    jsonConfig = config.Config()
+    jsonConfig = Config()
     flaskLog = logging.getLogger('werkzeug')
     flaskLog.disabled = True
     flask.cli.show_server_banner = lambda *args: None
-    logger = logger.Logger("logs.log",debugMode=debugBool)
+    logger = Logger("logs.log",debugMode=debugBool)
     logger.addInfo("Starting program...")
-    databaseObj = database.Database("database.db")
+    databaseObj = Database("database.db")
     logger.addInfo("Database loaded, building CSS...")
     createApp()
     buildCss()
