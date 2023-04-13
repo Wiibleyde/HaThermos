@@ -118,7 +118,7 @@ def getContainerIdByName(name):
 def startDocker(image, name, port):
     logger.addDebug(f"Starting docker {name}...")
     try:
-        container = client.containers.run(image, detach=True, ports={25565: port}, image=f"minecraft/{name}:latest", name=f"{name}")
+        container = client.containers.run(image, detach=True, ports={25565: port}, image=f"minecraft/{name}:latest", name=f"{name}",volume=f"{name}:/data")
         logger.addDebug(f"Starting docker {name}... Done")
         return container
     except Exception as e:
