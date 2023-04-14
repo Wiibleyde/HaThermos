@@ -3,7 +3,7 @@ import json
 class Ports:
     def __init__(self, filename):
         self.filename = filename
-        self.possiblePorts = [25566,25567,25568,25596]
+        self.possiblePorts = [25566,25567,25568,25569]
         self.usedPorts = []
         self.loadPorts()
 
