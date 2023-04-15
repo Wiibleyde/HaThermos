@@ -19,6 +19,6 @@ class CreateServerForm(FlaskForm):
     serverVersion = SelectField('serverVersion', choices=[('1.8.8', '1.8.8'), ('1.9.4', '1.9.4'), ('1.10.2', '1.10.2'), ('1.11.2', '1.11.2'), ('1.12.2', '1.12.2'), ('1.13.2', '1.13.2'), ('1.14.4', '1.14.4'), ('1.15.2', '1.15.2'), ('1.16.5', '1.16.5'), ('1.17.1', '1.17.1'), ('1.18.2', '1.18.2'), ('1.19.4','1.19.4')], validators=[DataRequired()])
     submit = SubmitField('submit', render_kw={"value": "Create"})
 
-class DeleteServerForm(FlaskForm):
-    serverName = StringField('serverName', validators=[DataRequired()])
-    submit = SubmitField('submit', render_kw={"value": "Delete"})
+class OpPlayerForm(FlaskForm):
+    player = StringField('player', validators=[DataRequired()], render_kw={"placeholder": "Minecraft player name"})
+    submit = SubmitField('submit', render_kw={"value": "Op player"})

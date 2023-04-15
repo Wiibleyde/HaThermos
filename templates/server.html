@@ -15,6 +15,7 @@
         <div class="flex flex-row items-center justify-center">
             <a href="/deleteServer/{{ server[0] }}" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Delete the server</a>
             <a href="/startServer/{{ server[0] }}" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Start the server</a>
+            <a href="/stopServer/{{ server[0] }}" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Stop the server</a>
         </div>
         <div class="container mx-auto">
             <div class="flex flex-col items-center justify-center">
@@ -26,6 +27,20 @@
             <div class="flex flex-col items-center justify-center">
                 <h1 class="text-4xl font-bold">IP : {{ server[4] }} (Port for now)</h1>
             </div>
+            <p class="text-2xl font-bold">Op player :</p>
+            {% block content %}
+            <form method="post" class="flex flex-col items-center justify-center">
+                {{ form.hidden_tag() }}
+                <div class="flex flex-col items-center justify-center">
+                    <div class="flex flex-col items-center justify-center text-black my-1">
+                        {{ form.player }}
+                    </div>
+                    <div class="flex flex-col items-center justify-center text-white my-1">
+                        {{ form.submit }}
+                    </div>
+                </div>
+            </form>
+            {% endblock %}
         </div>
     </body>
     <script src="/static/js/script.js"></script>

@@ -10,7 +10,7 @@ import requests
 
 # file import  
 from services.database import Database
-from services.flaskform import LoginForm, RegisterForm, CreateServerForm, DeleteServerForm
+from services.flaskform import LoginForm, RegisterForm, CreateServerForm, OpPlayerForm
 from services.config import Config
 from services.logger import Logger
 from services.ports import Ports
@@ -77,18 +77,56 @@ def checkMinecraftUsername(username):
 def startDocker(version, id, port):
     logger.addDebug(f"Starting docker {id}...")
     try:
-        container = client.containers.run(image=f"itzg/minecraft-server", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MODT=HaThermos Server"], name=f"{id}hathermos", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
+        container = client.containers.run(image=f"itzg/minecraft-server", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server"], name=f"{id}hathermos", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
         logger.addDebug(f"Starting docker {id}... Done")
         return container
     except Exception as e:
         logger.addError(f"Error starting docker {id}: {e}")
+        return False
+    
+def opPlayer(id,playerName):
+    logger.addDebug(f"Op player {playerName} in docker {id}...")
+    try:
+        # cmd : docker exec 3hathermos mc-send-to-console "op player"
+        container = client.containers.get(f"{id}hathermos")
+        container.exec_run(f"mc-send-to-console \"op {playerName}\"")
+        logger.addDebug(f"Op player {playerName} in docker {id}... Done")
+        return True
+    except Exception as e:
+        logger.addError(f"Error op player {playerName} in docker {id}: {e}")
+        return False
+    
+def deopPlayer(id,playerName):
+    logger.addDebug(f"Deop player {playerName} in docker {id}...")
+    try:
+        # cmd : docker exec 3hathermos mc-send-to-console "deop player"
+        container = client.containers.get(f"{id}hathermos")
+        container.exec_run(f"mc-send-to-console \"deop {playerName}\"")
+        logger.addDebug(f"Deop player {playerName} in docker {id}... Done")
+        return True
+    except Exception as e:
+        logger.addError(f"Error deop player {playerName} in docker {id}: {e}")
+        return False
+    
+def addPlayerToWhitelist(id,playerName):
+    logger.addDebug(f"Add player {playerName} to whitelist in docker {id}...")
+    try:
+        # cmd : docker exec 3hathermos mc-send-to-console "whitelist add player"
+        container = client.containers.get(f"{id}hathermos")
+        container.exec_run(f"mc-send-to-console \"whitelist add {playerName}\"")
+        logger.addDebug(f"Add player {playerName} to whitelist in docker {id}... Done")
+        return True
+    except Exception as e:
+        logger.addError(f"Error add player {playerName} to whitelist in docker {id}: {e}")
         return False
 
 def stopDocker(id):
     logger.addDebug(f"Stopping docker {id}...")
     try:
         container = client.containers.get(f"{id}hathermos")
+        # remove stop and remove container
         container.stop()
+        container.remove()
         logger.addDebug(f"Stopping docker {id}... Done")
         return True
     except Exception as e:
@@ -228,7 +266,7 @@ def dashboard():
     userServers = databaseObj.getServerByOwner(loggedUser.username)
     return render_template('dashboard.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Dashboard", PageNameLower="dashboard", servers=userServers, loggedUser=loggedUser, userAuth=userAuth)
 
-@app.route('/server/<id>')
+@app.route('/server/<id>', methods=['GET', 'POST'])
 @login_required
 def server(id):
     userAuth = False
@@ -239,11 +277,15 @@ def server(id):
         logger.addInfo('User is not logged in and going to the server page')
     loggedUser = current_user
     server = databaseObj.getServer(id)
-    if server[2] == loggedUser.username:
-        return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", server=server, loggedUser=loggedUser, userAuth=userAuth)
-    else:
-        return redirect(url_for('dashboard'))
-    
+    form = OpPlayerForm()
+    if form.validate_on_submit():
+        if opPlayer(server[0], form.player.data):
+            flash('Player added as op', category='success')
+            return redirect(url_for('server', id=id))
+        else:
+            flash('Player already op', category='error')
+            return redirect(url_for('server', id=id))
+    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", server=server, form=form, loggedUser=loggedUser, userAuth=userAuth)
 
 @app.route('/createServer', methods=['GET', 'POST'])
 @login_required
@@ -299,7 +341,24 @@ def startServer(id):
     else:
         flash('Invalid server', category='error')
         return redirect(url_for('dashboard'))
-
+    
+@app.route('/stopServer/<id>', methods=['GET', 'POST'])
+@login_required
+def stopServer(id):
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the stop server page')
+    else:
+        logger.addInfo('User is not logged in and going to the stop server page')
+    serverId = databaseObj.getServer(id)[0]
+    if stopDocker(id=serverId):
+        flash('Server stopped', category='success')
+        return redirect(url_for('dashboard'))
+    else:
+        flash('Invalid server', category='error')
+        return redirect(url_for('dashboard'))
+    
 if __name__ == '__main__':
     debugBool = parseArgs()
     jsonConfig = Config()
