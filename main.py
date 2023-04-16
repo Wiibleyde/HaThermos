@@ -13,7 +13,7 @@ from services.database import Database
 from services.flaskform import LoginForm, RegisterForm, CreateServerForm, OpPlayerForm
 from services.config import Config
 from services.logger import Logger
-from services.ports import Ports
+from services.servers import Servers
 
 # ==============================================================================
 # Environment variables 
@@ -77,7 +77,11 @@ def checkMinecraftUsername(username):
 def startDocker(version, id, port):
     logger.addDebug(f"Starting docker {id}...")
     try:
-        container = client.containers.run(image=f"itzg/minecraft-server", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server"], name=f"{id}hathermos", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
+        # container = client.containers.run(image=f"itzg/minecraft-server", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server"], name=f"{id}hathermos", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
+        if version == '1.8.8' or version =='1.9.4' or version == '1.10.2' or version == '1.11.2' or version == '1.12.2' or version == '1.13.2' or version == '1.14.4' or version == '1.15.2' or version == '1.16.5' or version == '1.17.1':
+            container = client.containers.run(image=f"itzg/minecraft-server:java8-graalvm-ce", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server","SPIGET_RESSOURCES=#327"], name=f"{id}hathermos", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
+        else:
+            container = client.containers.run(image=f"itzg/minecraft-server:java17-graalvm-ce", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server","SPIGET_RESSOURCES=327"], name=f"{id}hathermos", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
         logger.addDebug(f"Starting docker {id}... Done")
         return container
     except Exception as e:
@@ -277,6 +281,7 @@ def server(id):
         logger.addInfo('User is not logged in and going to the server page')
     loggedUser = current_user
     server = databaseObj.getServer(id)
+    port = servers.getRunningServerPort(server[0])
     form = OpPlayerForm()
     if form.validate_on_submit():
         if opPlayer(server[0], form.player.data):
@@ -285,7 +290,7 @@ def server(id):
         else:
             flash('Player already op', category='error')
             return redirect(url_for('server', id=id))
-    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", server=server, form=form, loggedUser=loggedUser, userAuth=userAuth)
+    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", server=server, form=form, loggedUser=loggedUser, userAuth=userAuth, port=port)
 
 @app.route('/createServer', methods=['GET', 'POST'])
 @login_required
@@ -333,9 +338,9 @@ def startServer(id):
     else:
         logger.addInfo('User is not logged in and going to the start server page')
     serverId = databaseObj.getServer(id)[0]
-    portToOpen = port.getFreePorts()
+    portToOpen = servers.getFreePort()
     if startDocker(id=serverId,port=portToOpen,version=databaseObj.getServer(id)[3]):
-        port.addPort(portToOpen)
+        servers.addRunningServer(serverId, portToOpen)
         flash('Server started', category='success')
         return redirect(url_for('dashboard'))
     else:
@@ -353,6 +358,7 @@ def stopServer(id):
         logger.addInfo('User is not logged in and going to the stop server page')
     serverId = databaseObj.getServer(id)[0]
     if stopDocker(id=serverId):
+        servers.removeRunningServer(serverId)
         flash('Server stopped', category='success')
         return redirect(url_for('dashboard'))
     else:
@@ -368,7 +374,7 @@ if __name__ == '__main__':
     logger = Logger("logs.log",debugMode=debugBool)
     logger.addInfo("Starting program...")
     logger.addInfo("Loading config...")
-    port = Ports("ports.json")
+    servers = Servers("servers.json")
     logger.addInfo("Ports loaded, loading database...")
     databaseObj = Database("database.db")
     # databaseObj.addAdmin("Wiibleyde","nathan@bonnell.fr","WiiBleyde33!")

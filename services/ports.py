@@ -43,6 +43,12 @@ class Ports:
                 freePorts.append(port)
         return freePorts
     
+    def getFreePort(self):
+        for port in self.possiblePorts:
+            if port not in self.usedPorts:
+                return port
+        return False
+    
     def addPort(self, port):
         if port not in self.usedPorts:
             self.usedPorts.append(port)
