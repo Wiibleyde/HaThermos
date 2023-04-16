@@ -33,28 +33,28 @@
                 {{ op.hidden_tag() }}
                 <div class="flex flex-col items-center justify-center">
                     <div class="flex flex-col items-center justify-center text-black my-1">
-                        {{ op.player }}
+                        {{ op.player1 }}
                     </div>
                     <div class="flex flex-col items-center justify-center text-white my-1">
-                        {{ op.submit }}
+                        {{ op.submit1 }}
                     </div>
                 </div>
             </form>
             {% endblock %}
             <p class="text-2xl font-bold">Whitelist player :</p>
-            <!-- {% block whitelist %}
+            {% block whitelist %}
             <form method="post" class="flex flex-col items-center justify-center">
                 {{ whitelist.hidden_tag() }}
                 <div class="flex flex-col items-center justify-center">
                     <div class="flex flex-col items-center justify-center text-black my-1">
-                        {{ whitelist.player }}
+                        {{ whitelist.player2 }}
                     </div>
                     <div class="flex flex-col items-center justify-center text-white my-1">
-                        {{ whitelist.submit }}
+                        {{ whitelist.submit2 }}
                     </div>
                 </div>
             </form>
-            {% endblock %} -->
+            {% endblock %}
         </div>
     </body>
     <script src="/static/js/script.js"></script>

@@ -10,7 +10,7 @@ import requests
 
 # file import  
 from services.database import DatabaseService
-from utils.flaskform import LoginForm, RegisterForm, CreateServerForm, OpPlayerForm, DeopPlayerForm, WhitelistPlayerForm, UnwhitelistPlayerForm
+from utils.flaskform import LoginForm, RegisterForm, CreateServerForm, OpPlayerForm, WhitelistPlayerForm
 from services.config import ConfigService
 from utils.logger import Logger
 from services.ports import PortsService
@@ -83,6 +83,7 @@ def startDocker(version, id, port):
         else:
             container = client.containers.run(image=f"itzg/minecraft-server:java17-graalvm-ce", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server","SPIGET_RESSOURCES=327"], name=f"{id}hathermos", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
         logger.addDebug(f"Starting docker {id}... Done")
+        enableWhitelist(id)
         return container
     except Exception as e:
         logger.addError(f"Error starting docker {id}: {e}")
@@ -122,6 +123,30 @@ def addPlayerToWhitelist(id,playerName):
         return True
     except Exception as e:
         logger.addError(f"Error add player {playerName} to whitelist in docker {id}: {e}")
+        return False
+
+def removePlayerFromWhitelist(id,playerName):
+    logger.addDebug(f"Remove player {playerName} from whitelist in docker {id}...")
+    try:
+        # cmd : docker exec 3hathermos mc-send-to-console "whitelist remove player"
+        container = client.containers.get(f"{id}hathermos")
+        container.exec_run(f"mc-send-to-console \"whitelist remove {playerName}\"")
+        logger.addDebug(f"Remove player {playerName} from whitelist in docker {id}... Done")
+        return True
+    except Exception as e:
+        logger.addError(f"Error remove player {playerName} from whitelist in docker {id}: {e}")
+        return False
+    
+def enableWhitelist(id):
+    logger.addDebug(f"Enable whitelist in docker {id}...")
+    try:
+        # cmd : docker exec 3hathermos mc-send-to-console "whitelist on"
+        container = client.containers.get(f"{id}hathermos")
+        container.exec_run(f"mc-send-to-console \"whitelist on\"")
+        logger.addDebug(f"Enable whitelist in docker {id}... Done")
+        return True
+    except Exception as e:
+        logger.addError(f"Error enable whitelist in docker {id}: {e}")
         return False
 
 def stopDocker(id):
@@ -287,14 +312,14 @@ def server(id):
     op = OpPlayerForm()
     whitelist = WhitelistPlayerForm()
     if op.validate_on_submit():
-        if opPlayer(server[0], op.player.data):
+        if opPlayer(server[0], op.player1.data):
             flash('Player added as op', category='success')
             return redirect(url_for('server', id=id))
         else:
             flash('Player already op', category='error')
             return redirect(url_for('server', id=id))
     if whitelist.validate_on_submit():
-        if addPlayerToWhitelist(server[0], whitelist.player.data):
+        if addPlayerToWhitelist(server[0], whitelist.player2.data):
             flash('Player added to whitelist', category='success')
             return redirect(url_for('server', id=id))
         else:
@@ -347,6 +372,9 @@ def startServer(id):
         logger.addInfo(f'User {current_user.username} is logged in and going to the start server page')
     else:
         logger.addInfo('User is not logged in and going to the start server page')
+    if databaseObj.isUserServerHasPort(current_user.username):
+        flash('You can only have one server running at a time', category='error')
+        return redirect(url_for('dashboard'))
     serverId = databaseObj.getServer(id)[0]
     portToOpen = ports.getFreePort()
     if portToOpen == None:

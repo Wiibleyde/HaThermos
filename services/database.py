@@ -218,3 +218,18 @@ class DatabaseService:
             return True
         except:
             return False
+        
+    def getUserServers(self, username):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('SELECT * FROM servers WHERE owner = ?', (username,))
+        servers = c.fetchall()
+        conn.close()
+        return servers
+    
+    def isUserServerHasPort(self, username):
+        servers = self.getUserServers(username)
+        for server in servers:
+            if server[3] != 0:
+                return True
+        return False
