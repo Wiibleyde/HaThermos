@@ -1,0 +1,6 @@
+.dockerignore
+Dockerfile
+docker-compose.yml
+database.db
+*.log
+ports.json

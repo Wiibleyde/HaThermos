@@ -230,6 +230,7 @@ class DatabaseService:
     def isUserServerHasPort(self, username):
         servers = self.getUserServers(username)
         for server in servers:
-            if server[3] != 0:
+            if server[4] != None:
                 return True
         return False
+    

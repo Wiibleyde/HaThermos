@@ -85,7 +85,7 @@ def startDocker(version, id, port):
             container = client.containers.run(image=f"itzg/minecraft-server:java17-graalvm-ce", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server","SPIGET_RESSOURCES=327"], name=f"{id}hathermos", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
         logger.addDebug(f"Starting docker {id}... Done")
         enableWhitelist(id)
-        return container
+        return True
     except Exception as e:
         logger.addError(f"Error starting docker {id}: {e}")
         return False
@@ -421,7 +421,7 @@ if __name__ == '__main__':
     ports = PortsService("ports.json")
     logger.addInfo("Ports loaded, loading database...")
     databaseObj = DatabaseService("database.db")
-    # databaseObj.addAdmin("Wiibleyde","nathan@bonnell.fr","WiiBleyde33!")
+    databaseObj.addAdmin("Wiibleyde","nathan@bonnell.fr","WiiBleyde33!")
     logger.addInfo("Database loaded, building CSS...")
     createApp()
     buildCss()
