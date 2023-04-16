@@ -28,19 +28,33 @@
                 <h1 class="text-4xl font-bold">IP : {{ port }}</h1>
             </div>
             <p class="text-2xl font-bold">Op player :</p>
-            {% block content %}
+            {% block op %}
             <form method="post" class="flex flex-col items-center justify-center">
-                {{ form.hidden_tag() }}
+                {{ op.hidden_tag() }}
                 <div class="flex flex-col items-center justify-center">
                     <div class="flex flex-col items-center justify-center text-black my-1">
-                        {{ form.player }}
+                        {{ op.player }}
                     </div>
                     <div class="flex flex-col items-center justify-center text-white my-1">
-                        {{ form.submit }}
+                        {{ op.submit }}
                     </div>
                 </div>
             </form>
             {% endblock %}
+            <p class="text-2xl font-bold">Whitelist player :</p>
+            <!-- {% block whitelist %}
+            <form method="post" class="flex flex-col items-center justify-center">
+                {{ whitelist.hidden_tag() }}
+                <div class="flex flex-col items-center justify-center">
+                    <div class="flex flex-col items-center justify-center text-black my-1">
+                        {{ whitelist.player }}
+                    </div>
+                    <div class="flex flex-col items-center justify-center text-white my-1">
+                        {{ whitelist.submit }}
+                    </div>
+                </div>
+            </form>
+            {% endblock %} -->
         </div>
     </body>
     <script src="/static/js/script.js"></script>

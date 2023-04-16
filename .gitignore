@@ -141,6 +141,7 @@ accounts.json
 serversConfig.json
 serverList.json
 servers.json
+ports.json
 *.db
 
 # tailwind css

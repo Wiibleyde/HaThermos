@@ -22,3 +22,15 @@ class CreateServerForm(FlaskForm):
 class OpPlayerForm(FlaskForm):
     player = StringField('player', validators=[DataRequired()], render_kw={"placeholder": "Minecraft player name"})
     submit = SubmitField('submit', render_kw={"value": "Op player"})
+
+class DeopPlayerForm(FlaskForm):
+    player = StringField('player', validators=[DataRequired()], render_kw={"placeholder": "Minecraft player name"})
+    submit = SubmitField('submit', render_kw={"value": "Deop player"})
+
+class WhitelistPlayerForm(FlaskForm):
+    player = StringField('player', validators=[DataRequired()], render_kw={"placeholder": "Minecraft player name"})
+    submit = SubmitField('submit', render_kw={"value": "Whitelist player"})
+
+class UnwhitelistPlayerForm(FlaskForm):
+    player = StringField('player', validators=[DataRequired()], render_kw={"placeholder": "Minecraft player name"})
+    submit = SubmitField('submit', render_kw={"value": "Unwhitelist player"})

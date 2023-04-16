@@ -1,7 +1,7 @@
 import json
 import os
 
-class Config:
+class ConfigService:
     def __init__(self):
         self.fileName = 'serversConfig.json'
         if not os.path.exists(self.fileName):

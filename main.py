@@ -9,11 +9,11 @@ import docker
 import requests
 
 # file import  
-from services.database import Database
-from services.flaskform import LoginForm, RegisterForm, CreateServerForm, OpPlayerForm
-from services.config import Config
-from services.logger import Logger
-from services.servers import Servers
+from services.database import DatabaseService
+from utils.flaskform import LoginForm, RegisterForm, CreateServerForm, OpPlayerForm, DeopPlayerForm, WhitelistPlayerForm, UnwhitelistPlayerForm
+from services.config import ConfigService
+from utils.logger import Logger
+from services.ports import PortsService
 
 # ==============================================================================
 # Environment variables 
@@ -281,16 +281,26 @@ def server(id):
         logger.addInfo('User is not logged in and going to the server page')
     loggedUser = current_user
     server = databaseObj.getServer(id)
-    port = servers.getRunningServerPort(server[0])
-    form = OpPlayerForm()
-    if form.validate_on_submit():
-        if opPlayer(server[0], form.player.data):
+    port = server[4]
+    if port == None:
+        port = "Server is not running"
+    op = OpPlayerForm()
+    whitelist = WhitelistPlayerForm()
+    if op.validate_on_submit():
+        if opPlayer(server[0], op.player.data):
             flash('Player added as op', category='success')
             return redirect(url_for('server', id=id))
         else:
             flash('Player already op', category='error')
             return redirect(url_for('server', id=id))
-    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", server=server, form=form, loggedUser=loggedUser, userAuth=userAuth, port=port)
+    if whitelist.validate_on_submit():
+        if addPlayerToWhitelist(server[0], whitelist.player.data):
+            flash('Player added to whitelist', category='success')
+            return redirect(url_for('server', id=id))
+        else:
+            flash('Player already whitelisted', category='error')
+            return redirect(url_for('server', id=id))
+    return render_template('server.html', ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Server", PageNameLower="server", server=server, op=op, loggedUser=loggedUser, userAuth=userAuth, port=port, whitelist=whitelist)
 
 @app.route('/createServer', methods=['GET', 'POST'])
 @login_required
@@ -338,9 +348,13 @@ def startServer(id):
     else:
         logger.addInfo('User is not logged in and going to the start server page')
     serverId = databaseObj.getServer(id)[0]
-    portToOpen = servers.getFreePort()
+    portToOpen = ports.getFreePort()
+    if portToOpen == None:
+        flash('No ports available, try again later', category='error')
+        return redirect(url_for('dashboard'))
     if startDocker(id=serverId,port=portToOpen,version=databaseObj.getServer(id)[3]):
-        servers.addRunningServer(serverId, portToOpen)
+        ports.addPort(portToOpen)
+        databaseObj.updateServerPort(serverId, portToOpen)
         flash('Server started', category='success')
         return redirect(url_for('dashboard'))
     else:
@@ -358,7 +372,8 @@ def stopServer(id):
         logger.addInfo('User is not logged in and going to the stop server page')
     serverId = databaseObj.getServer(id)[0]
     if stopDocker(id=serverId):
-        servers.removeRunningServer(serverId)
+        ports.removePort(databaseObj.getServer(id)[4])
+        databaseObj.updateServerPort(serverId, None)
         flash('Server stopped', category='success')
         return redirect(url_for('dashboard'))
     else:
@@ -367,16 +382,16 @@ def stopServer(id):
     
 if __name__ == '__main__':
     debugBool = parseArgs()
-    jsonConfig = Config()
+    jsonConfig = ConfigService()
     flaskLog = logging.getLogger('werkzeug')
     flaskLog.disabled = True
     flask.cli.show_server_banner = lambda *args: None
     logger = Logger("logs.log",debugMode=debugBool)
     logger.addInfo("Starting program...")
     logger.addInfo("Loading config...")
-    servers = Servers("servers.json")
+    ports = PortsService("ports.json")
     logger.addInfo("Ports loaded, loading database...")
-    databaseObj = Database("database.db")
+    databaseObj = DatabaseService("database.db")
     # databaseObj.addAdmin("Wiibleyde","nathan@bonnell.fr","WiiBleyde33!")
     logger.addInfo("Database loaded, building CSS...")
     createApp()

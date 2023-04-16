@@ -1,7 +1,7 @@
 import sqlite3
 import hashlib
 
-class Database:
+class DatabaseService:
     # server is database
     def __init__(self, fileName):
         self.fileName = fileName
@@ -10,7 +10,7 @@ class Database:
     def createDatabase(self):
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
-        c.execute('CREATE TABLE IF NOT EXISTS servers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, owner TEXT, serverVersion TEXT)')
+        c.execute('CREATE TABLE IF NOT EXISTS servers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, owner TEXT, serverVersion TEXT, serverPort INTEGER)')
         c.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, email TEXT, password TEXT, admin BOOLEAN)')
         conn.commit()
         conn.close()
@@ -206,4 +206,15 @@ class Database:
         if user[3] == hashlib.sha256(password.encode()).hexdigest():
             return user
         else:
+            return False
+
+    def updateServerPort(self, id, port):
+        try:
+            conn = sqlite3.connect(self.fileName)
+            c = conn.cursor()
+            c.execute('UPDATE servers SET serverPort = ? WHERE id = ?', (port, id))
+            conn.commit()
+            conn.close()
+            return True
+        except:
             return False
