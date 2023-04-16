@@ -38,11 +38,12 @@ def unauthorized():
     return redirect(url_for('login'))
 
 def buildCss():
-    logger.addDebug("Building CSS : downloading")
-    subprocess.run(["npm","i"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    logger.addDebug("Building CSS : downloading... Done")
+    # logger.addDebug("Building CSS : downloading")
+    # subprocess.run(["npm","i"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # logger.addDebug("Building CSS : downloading... Done")
     logger.addDebug("Building CSS : building")
-    subprocess.run(["npx","tailwindcss", "-i", "./static/css/input.css", "-o", "./static/css/tailwind.css"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # subprocess.run(["npx","tailwindcss", "-i", "./static/css/input.css", "-o", "./static/css/tailwind.css"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(["./tailwindcss", "-i", "./static/css/input.css", "-o", "./static/css/tailwind.css"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     logger.addDebug("Building CSS : building... Done")
 
 def parseArgs():

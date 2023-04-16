@@ -1,0 +1,18 @@
+version: "3.7"
+
+services:
+  hathermos:
+    image: wiibleyde/hathermos:latest
+    container_name: hathermos
+    restart: always
+    ports:
+      - "8090:8090"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - hathermos
+
+networks:
+  default:
+    external:
+      name: hathermos
