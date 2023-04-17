@@ -3,34 +3,24 @@ from mcstatus import JavaServer
 class MinecraftService:
     def __init__(self, host, port):
         self.server = JavaServer(host, port)
-
-    def getServerStatus(self):
         try:
-            status = self.server.status()
-            return status
+            self.status = self.server.status()
         except:
-            return False
+            self.status = False
         
     def getPlayers(self):
-        try:
-            players = self.server.query()
-            return players.players.online
-        except:
-            return False
+        if self.status is not None:
+            try:
+                return [player.name for player in self.status.players.sample]
+            except:
+                return None
+        else:
+            return None
         
     def getPlayerCount(self):
-        try:
-            players = self.getPlayers()
-            if players:
-                return len(players)
-            else:
-                return 0
-        except:
-            return False
+        if self.status:
+            return self.status.players.online
         
     def getMaxPlayers(self):
-        try:
-            status = self.server.status()
-            return status.players.max
-        except:
-            return False
+        if self.status:
+            return self.status.players.max

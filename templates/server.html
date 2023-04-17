@@ -8,23 +8,40 @@
         <title>{{ ProjectName }} - {{ PageName }}</title>
         <script>
             function getServerStatus() {
-                $.ajax({
-                    url: "/api/server/{{ server[0] }}",
-                    type: "GET",
-                    success: function (data) {
-                        console.log(data);
-                        $("#status").html(data.status);
-                        $("#playerCount").html(data.playerCount);
-                        $("#maxPlayers").html(data.maxPlayers);
-                        $("#playerList").html(data.playerList);
-                    }
-
-                })
+                try {
+                    $.ajax({
+                        url: "/api/server/{{ server[0] }}",
+                        type: "GET",
+                        success: function (data) {
+                            $("#status").html(data.status)
+                            $("#playerCount").html(data.playerCount)
+                            $("#maxPlayers").html(data.maxPlayers)
+                            try {
+                                $("#playerList").html(
+                                    data.playerList.map(function (player) {return player.name}).join(", ")
+                                )
+                            } catch (error) {
+                                $("#playerList").html("No players online.")
+                            }
+                        },
+                        error: function (data) {
+                            $("#status").html("Offline")
+                            $("#playerCount").html("0")
+                            $("#maxPlayers").html("0")
+                            $("#playerList").html("No players online.")
+                        }
+                    })
+                } catch (error) {
+                    $("#status").html("Offline")
+                    $("#playerCount").html("0")
+                    $("#maxPlayers").html("0")
+                    $("#playerList").html("No players online.")
+                }
             }
 
             $("#status").html("Loading...")
             $("#playerCount").html("Loading...")
-            $("#maxPlayers").html(20)
+            $("#maxPlayers").html("Loading...")
             $("#playerList").html("Loading...")
 
             setInterval(getServerStatus, 1000)
@@ -46,7 +63,7 @@
                 <div>
                     <p>Status: <span id="status"></span></p>
                     <p>Player count: <span id="playerCount"></span>/<span id="maxPlayers"></span></p>
-                    <p>Players:<span id="playerList"></span></p>
+                    <p>Players: <span id="playerList"></span></p>
                 </div>
             </div>
             <div class="flex flex-col items-center justify-center">

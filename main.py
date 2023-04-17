@@ -403,8 +403,8 @@ def stopServer(id):
 @app.route('/api/server/<id>')
 def apiServer(id):
     mcServer = MinecraftService('127.0.0.1', databaseObj.getServer(id)[4])
-    status = mcServer.getServerStatus()
-    if status == None:
+    status = mcServer.status
+    if status == False:
         return jsonify({"status": "offline"})
     else:
         return jsonify({"status": "online", "players": mcServer.getPlayers(), "playerCount": mcServer.getPlayerCount(), "maxPlayers": mcServer.getMaxPlayers()})
@@ -417,14 +417,12 @@ if __name__ == '__main__':
     flask.cli.show_server_banner = lambda *args: None
     logger = Logger("logs.log",debugMode=debugBool)
     logger.addInfo("Starting program...")
-    logger.addInfo("Loading config...")
     ports = PortsService("ports.json")
-    logger.addInfo("Ports loaded, loading database...")
     databaseObj = DatabaseService("database.db")
     databaseObj.addAdmin("Wiibleyde","nathan@bonnell.fr","WiiBleyde33!")
-    logger.addInfo("Database loaded, building CSS...")
+    logger.addInfo("Utils loaded")
     createApp()
     buildCss()
-    logger.addInfo("CSS built, starting server...")
+    logger.addInfo("Web server started on port 8090")
     app.register_error_handler(404, ErrorHandler)
     app.run(port=8090, debug=False,host='0.0.0.0')
