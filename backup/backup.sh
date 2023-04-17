@@ -4,6 +4,7 @@
 minecraft_dir="/srv/minecraft-data/$1"
 
 # Répertoire de destination des sauvegardes
+# TODO : Pour la backup dir il faut utiliser le STFP (192.168.1.2)
 backup_dir="/home/wiibleyde/backup/"
 
 # Nom de base des archives de sauvegarde
