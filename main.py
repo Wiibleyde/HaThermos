@@ -76,9 +76,9 @@ def startDocker(version, id, port):
     logger.addDebug(f"Starting docker {id}...")
     try:
         if version == '1.8.8' or version =='1.9.4' or version == '1.10.2' or version == '1.11.2' or version == '1.12.2' or version == '1.13.2' or version == '1.14.4' or version == '1.15.2' or version == '1.16.5' or version == '1.17.1':
-            container = client.containers.run(image=f"itzg/minecraft-server:java8-graalvm-ce", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server","SPIGET_RESSOURCES=#327"], name=f"{id}hathermos", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
+            container = client.containers.run(image=f"itzg/minecraft-server:java8-graalvm-ce", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server","SPIGET_RESSOURCES=#327","ENABLE_COMMAND_BLOCK=true"], name=f"{id}hathermos", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
         else:
-            container = client.containers.run(image=f"itzg/minecraft-server:java17-graalvm-ce", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server","SPIGET_RESSOURCES=327"], name=f"{id}hathermos", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
+            container = client.containers.run(image=f"itzg/minecraft-server:java17-graalvm-ce", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server","SPIGET_RESSOURCES=#327","ENABLE_COMMAND_BLOCK=true"], name=f"{id}hathermos", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
         logger.addDebug(f"Starting docker {id}... Done")
         enableWhitelist(id)
         return True
@@ -332,7 +332,7 @@ def createServer():
     if form.validate_on_submit():
         if databaseObj.addServer(form.serverName.data, current_user.username, form.serverVersion.data):
             flash('Server created', category='success')
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('server', id=id))
         else:
             flash('Server already exists', category='error')
             return redirect(url_for('createServer'))
@@ -353,7 +353,7 @@ def deleteServer(id):
         return redirect(url_for('dashboard'))
     else:
         flash('Invalid server', category='error')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('server', id=id))
     
 @app.route('/startServer/<id>', methods=['GET', 'POST'])
 @login_required
@@ -376,10 +376,10 @@ def startServer(id):
         ports.addPort(portToOpen)
         databaseObj.updateServerPort(serverId, portToOpen)
         flash('Server started', category='success')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('server', id=id))
     else:
         flash('Invalid server', category='error')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('server', id=id))
     
 @app.route('/stopServer/<id>', methods=['GET', 'POST'])
 @login_required
@@ -395,10 +395,19 @@ def stopServer(id):
         ports.removePort(databaseObj.getServer(id)[4])
         databaseObj.updateServerPort(serverId, None)
         flash('Server stopped', category='success')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('server', id=id))
     else:
         flash('Invalid server', category='error')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('server', id=id))
+
+@app.route('/api/server/<id>')
+def apiServer(id):
+    mcServer = MinecraftService('127.0.0.1', databaseObj.getServer(id)[4])
+    status = mcServer.getServerStatus()
+    if status == None:
+        return jsonify({"status": "offline"})
+    else:
+        return jsonify({"status": "online", "players": mcServer.getPlayers(), "playerCount": mcServer.getPlayerCount(), "maxPlayers": mcServer.getMaxPlayers()})
 
 if __name__ == '__main__':
     debugBool = parseArgs()

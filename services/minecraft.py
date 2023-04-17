@@ -13,20 +13,24 @@ class MinecraftService:
         
     def getPlayers(self):
         try:
-            return [{'name': player.name, 'uuid': player.id} for player in self.server.players().sample]
+            players = self.server.query()
+            return players.players.online
         except:
             return False
         
     def getPlayerCount(self):
         try:
-            players = self.server.players()
-            return players.online
+            players = self.getPlayers()
+            if players:
+                return len(players)
+            else:
+                return 0
         except:
             return False
         
     def getMaxPlayers(self):
         try:
-            players = self.server.players()
-            return players.max
+            status = self.server.status()
+            return status.players.max
         except:
             return False
