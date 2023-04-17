@@ -1,5 +1,1 @@
-function closeMessageOnClick(id) {
-    document.querySelector(id).addEventListener("click", function() {
-        this.style.display = "none"
-    })
-}
+console.log("%cHATHERMOS WARNING: The JavaScript console is a powerful tool that can modify website behavior and expose sensitive information. Please do not enter any commands unless you understand the consequences of your actions.", "color: red; font-size: 18px; font-weight: bold;");

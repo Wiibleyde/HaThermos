@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, flash
+from flask import Flask, render_template, redirect, url_for, flash, jsonify, request
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import flask.cli
 import subprocess
@@ -14,6 +14,7 @@ from utils.flaskform import LoginForm, RegisterForm, CreateServerForm, OpPlayerF
 from services.config import ConfigService
 from utils.logger import Logger
 from services.ports import PortsService
+from services.minecraft import MinecraftService
 
 # ==============================================================================
 # Environment variables 
@@ -38,11 +39,7 @@ def unauthorized():
     return redirect(url_for('login'))
 
 def buildCss():
-    # logger.addDebug("Building CSS : downloading")
-    # subprocess.run(["npm","i"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    # logger.addDebug("Building CSS : downloading... Done")
     logger.addDebug("Building CSS : building")
-    # subprocess.run(["npx","tailwindcss", "-i", "./static/css/input.css", "-o", "./static/css/tailwind.css"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     subprocess.run(["./tailwindcss", "-i", "./static/css/input.css", "-o", "./static/css/tailwind.css"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     logger.addDebug("Building CSS : building... Done")
 
@@ -78,7 +75,6 @@ def checkMinecraftUsername(username):
 def startDocker(version, id, port):
     logger.addDebug(f"Starting docker {id}...")
     try:
-        # container = client.containers.run(image=f"itzg/minecraft-server", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server"], name=f"{id}hathermos", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
         if version == '1.8.8' or version =='1.9.4' or version == '1.10.2' or version == '1.11.2' or version == '1.12.2' or version == '1.13.2' or version == '1.14.4' or version == '1.15.2' or version == '1.16.5' or version == '1.17.1':
             container = client.containers.run(image=f"itzg/minecraft-server:java8-graalvm-ce", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server","SPIGET_RESSOURCES=#327"], name=f"{id}hathermos", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
         else:
@@ -93,7 +89,6 @@ def startDocker(version, id, port):
 def opPlayer(id,playerName):
     logger.addDebug(f"Op player {playerName} in docker {id}...")
     try:
-        # cmd : docker exec 3hathermos mc-send-to-console "op player"
         container = client.containers.get(f"{id}hathermos")
         container.exec_run(f"mc-send-to-console \"op {playerName}\"")
         logger.addDebug(f"Op player {playerName} in docker {id}... Done")
@@ -105,7 +100,6 @@ def opPlayer(id,playerName):
 def deopPlayer(id,playerName):
     logger.addDebug(f"Deop player {playerName} in docker {id}...")
     try:
-        # cmd : docker exec 3hathermos mc-send-to-console "deop player"
         container = client.containers.get(f"{id}hathermos")
         container.exec_run(f"mc-send-to-console \"deop {playerName}\"")
         logger.addDebug(f"Deop player {playerName} in docker {id}... Done")
@@ -117,7 +111,6 @@ def deopPlayer(id,playerName):
 def addPlayerToWhitelist(id,playerName):
     logger.addDebug(f"Add player {playerName} to whitelist in docker {id}...")
     try:
-        # cmd : docker exec 3hathermos mc-send-to-console "whitelist add player"
         container = client.containers.get(f"{id}hathermos")
         container.exec_run(f"mc-send-to-console \"whitelist add {playerName}\"")
         logger.addDebug(f"Add player {playerName} to whitelist in docker {id}... Done")
@@ -129,7 +122,6 @@ def addPlayerToWhitelist(id,playerName):
 def removePlayerFromWhitelist(id,playerName):
     logger.addDebug(f"Remove player {playerName} from whitelist in docker {id}...")
     try:
-        # cmd : docker exec 3hathermos mc-send-to-console "whitelist remove player"
         container = client.containers.get(f"{id}hathermos")
         container.exec_run(f"mc-send-to-console \"whitelist remove {playerName}\"")
         logger.addDebug(f"Remove player {playerName} from whitelist in docker {id}... Done")
@@ -141,7 +133,6 @@ def removePlayerFromWhitelist(id,playerName):
 def enableWhitelist(id):
     logger.addDebug(f"Enable whitelist in docker {id}...")
     try:
-        # cmd : docker exec 3hathermos mc-send-to-console "whitelist on"
         container = client.containers.get(f"{id}hathermos")
         container.exec_run(f"mc-send-to-console \"whitelist on\"")
         logger.addDebug(f"Enable whitelist in docker {id}... Done")
@@ -408,7 +399,7 @@ def stopServer(id):
     else:
         flash('Invalid server', category='error')
         return redirect(url_for('dashboard'))
-    
+
 if __name__ == '__main__':
     debugBool = parseArgs()
     jsonConfig = ConfigService()
