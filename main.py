@@ -258,6 +258,40 @@ def register():
             return redirect(url_for('register'))
     return render_template('register.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Register", PageNameLower="register", userAuth=userAuth)
 
+@app.route('/admin/accounts')
+@login_required
+def adminAccounts():
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the admin accounts page')
+        if not databaseObj.isAdmin(current_user.username):
+            flash('You are not an admin', category='error')
+            return redirect(url_for('index'))
+    else:
+        logger.addInfo('User is not logged in and going to the admin accounts page')
+        return redirect(url_for('index'))
+    accounts = databaseObj.getUsers()
+    logger.addDebug(accounts)
+    return render_template("adminAccount.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Admin Accounts", PageNameLower="admin/accounts", userAuth=userAuth, Accounts=accounts)
+
+@app.route('/admin/servers')
+@login_required
+def adminServers():
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the admin servers page')
+        if not databaseObj.isAdmin(current_user.username):
+            flash('You are not an admin', category='error')
+            return redirect(url_for('index'))
+    else:
+        logger.addInfo('User is not logged in and going to the admin servers page')
+        return redirect(url_for('index'))
+    servers = databaseObj.getServers()
+    logger.addDebug(servers)
+    return render_template("adminServer.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Admin Servers", PageNameLower="admin/servers", userAuth=userAuth, Servers=servers)
+
 @app.route('/deleteAccount', methods=['GET', 'POST'])
 @login_required
 def deleteAccount():
@@ -269,10 +303,110 @@ def deleteAccount():
         logger.addInfo('User is not logged in and going to the delete account page')
     loggedUser = current_user
     if userAuth:
-        databaseObj.deleteUser(loggedUser.username)
-        logout_user()
-        flash('Account deleted', category='success')
+        if loggedUser == current_user:
+            databaseObj.deleteUser(loggedUser.username)
+            logout_user()
+            flash('Account deleted', category='success')
+            return redirect(url_for('index'))
+        else:
+            flash('You can only delete your own account', category='error')
+            return redirect(url_for('index'))
+    else:
+        flash('You need to be logged in to delete your account', category='error')
         return redirect(url_for('index'))
+    
+@app.route('/deleteAccount/<id>')
+@login_required
+def deleteAccountAdmin(id):
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the delete account page')
+        if not databaseObj.isAdmin(current_user.username):
+            flash('You are not an admin', category='error')
+            return redirect(url_for('index'))
+    else:
+        logger.addInfo('User is not logged in and going to the delete account page')
+        return redirect(url_for('index'))
+    if userAuth:
+        databaseObj.deleteUser(id)
+        flash('Account deleted', category='success')
+        return redirect(url_for('adminAccounts'))
+    else:
+        flash('You need to be logged (and admin) in to delete an account', category='error')
+        return redirect(url_for('index'))
+
+@app.route('/setAdmin/<id>')
+@login_required
+def setAdminAdmin(id):
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the set admin page')
+        if not databaseObj.isAdmin(current_user.username):
+            flash('You are not an admin', category='error')
+            return redirect(url_for('index'))
+    else:
+        logger.addInfo('User is not logged in and going to the set admin page')
+        return redirect(url_for('index'))
+    if userAuth:
+        databaseObj.setAdmin(id)
+        flash('Account set as admin', category='success')
+        return redirect(url_for('adminAccounts'))
+    else:
+        flash('You need to be logged (and admin) in to set an account as admin', category='error')
+        return redirect(url_for('index'))
+    
+@app.route('/unsetAdmin/<id>')
+@login_required
+def unsetAdminAdmin(id):
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the unset admin page')
+        if not databaseObj.isAdmin(current_user.username):
+            flash('You are not an admin', category='error')
+            return redirect(url_for('index'))
+    else:
+        logger.addInfo('User is not logged in and going to the unset admin page')
+        return redirect(url_for('index'))
+    if userAuth:
+        databaseObj.unsetAdmin(id)
+        flash('Account unset as admin', category='success')
+        return redirect(url_for('adminAccounts'))
+    else:
+        flash('You need to be logged (and admin) in to unset an account as admin', category='error')
+        return redirect(url_for('index'))
+    
+@app.route('/deleteServer/<id>')
+@login_required
+def deleteServerAdmin(id):
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the delete server page')
+        if not databaseObj.isAdmin(current_user.username):
+            flash('You are not an admin', category='error')
+            return redirect(url_for('index'))
+    else:
+        logger.addInfo('User is not logged in and going to the delete server page')
+        return redirect(url_for('index'))
+    if userAuth:
+        if databaseObj.getServer(id)[4] != None:
+            if databaseObj.deleteServer(id):
+                flash('Server deleted', category='success')
+                return redirect(url_for('adminServers'))
+            else:
+                stopDocker(id)
+                if databaseObj.deleteServer(id):
+                    flash('Server deleted', category='success')
+                    return redirect(url_for('adminServers'))
+                else:
+                    flash('Error deleting server', category='error')
+                    return redirect(url_for('adminServers'))
+        else:
+            flash('Error deleting server', category='error')
+            return redirect(url_for('adminServers'))
 
 @app.route('/dashboard')
 @login_required
@@ -298,6 +432,9 @@ def server(id):
         logger.addInfo('User is not logged in and going to the server page')
     loggedUser = current_user
     server = databaseObj.getServer(id)
+    if server[2] != loggedUser.username:
+        flash('You are not the owner of this server', category='error')
+        return redirect(url_for('dashboard'))
     port = server[4]
     if port == None:
         port = "Server is not running"
@@ -349,6 +486,9 @@ def deleteServer(id):
     else:
         logger.addInfo('User is not logged in and going to the delete server page')
     serverName = databaseObj.getServer(id)[1]
+    if databaseObj.getServer(id)[2] != current_user.username:
+        flash('You can only delete your own servers', category='error')
+        return redirect(url_for('dashboard'))
     if databaseObj.deleteServer(id):
         flash('Server deleted', category='success')
         return redirect(url_for('dashboard'))
@@ -365,6 +505,9 @@ def startServer(id):
         logger.addInfo(f'User {current_user.username} is logged in and going to the start server page')
     else:
         logger.addInfo('User is not logged in and going to the start server page')
+    if databaseObj.getServer(id)[2] != current_user.username:
+        flash('You can only start your own servers', category='error')
+        return redirect(url_for('dashboard'))
     if databaseObj.isUserServerHasPort(current_user.username):
         flash('You can only have one server running at a time', category='error')
         return redirect(url_for('dashboard'))
@@ -392,6 +535,9 @@ def stopServer(id):
     else:
         logger.addInfo('User is not logged in and going to the stop server page')
     serverId = databaseObj.getServer(id)[0]
+    if databaseObj.getServer(id)[2] != current_user.username:
+        flash('You can only stop your own servers', category='error')
+        return redirect(url_for('dashboard'))
     if stopDocker(id=serverId):
         ports.removePort(databaseObj.getServer(id)[4])
         databaseObj.updateServerPort(serverId, None)

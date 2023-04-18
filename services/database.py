@@ -109,6 +109,39 @@ class DatabaseService:
         conn.close()
         return True
     
+    def isAdmin(self, username):
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('SELECT * FROM users WHERE username = ? AND admin = ?', (username, True))
+        user = c.fetchone()
+        conn.close()
+        if user:
+            return True
+        else:
+            return False
+        
+    def setAdmin(self, username):
+        try:
+            conn = sqlite3.connect(self.fileName)
+            c = conn.cursor()
+            c.execute('UPDATE users SET admin = ? WHERE username = ?', (True, username))
+            conn.commit()
+            conn.close()
+            return True
+        except:
+            return False
+    
+    def unsetAdmin(self, username):
+        try:
+            conn = sqlite3.connect(self.fileName)
+            c = conn.cursor()
+            c.execute('UPDATE users SET admin = ? WHERE username = ?', (False, username))
+            conn.commit()
+            conn.close()
+            return True
+        except:
+            return False
+
     def addUser(self, username, email, password):
         if self.testIfUserExist(username):
             return False
