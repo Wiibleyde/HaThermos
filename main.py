@@ -332,7 +332,8 @@ def createServer():
     if form.validate_on_submit():
         if databaseObj.addServer(form.serverName.data, current_user.username, form.serverVersion.data):
             flash('Server created', category='success')
-            return redirect(url_for('server', id=id))
+            server = databaseObj.getServerByName(form.serverName.data)
+            return redirect(url_for('server', id=server[0]))
         else:
             flash('Server already exists', category='error')
             return redirect(url_for('createServer'))
