@@ -378,7 +378,7 @@ def unsetAdminAdmin(id):
         flash('You need to be logged (and admin) in to unset an account as admin', category='error')
         return redirect(url_for('index'))
     
-@app.route('/deleteServer/<id>')
+@app.route('/deleteServerAdmin/<id>')
 @login_required
 def deleteServerAdmin(id):
     userAuth = False
