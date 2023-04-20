@@ -1,5 +1,7 @@
 # HaThermos
 
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/4af34b6cf53e414b92851d98d49566b1)](https://app.codacy.com/gh/Wiibleyde/HaThermos/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+
 Command to install python lib :
 ```bash
 pip install -r requirements.txt
