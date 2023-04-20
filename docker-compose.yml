@@ -10,9 +10,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      - hathermos
+      toto:
 
 networks:
-  default:
-    external:
-      name: hathermos
+  toto:
