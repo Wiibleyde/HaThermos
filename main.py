@@ -1,13 +1,11 @@
-from flask import Flask, render_template, redirect, url_for, flash, jsonify, request
+from flask import Flask, render_template, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import flask.cli
 import subprocess
 import logging
-import logging
 import argparse
 import docker
 import requests
-import threading
 
 # file import  
 from utils.database import DatabaseService
@@ -20,7 +18,7 @@ from utils.minecraft import MinecraftService
 # ==============================================================================
 # Environment variables 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'ceciestunsecret'
+app.config['SECRET_KEY'] = '10fba9806ecc78b383c2bc6345b6145794a35acac9c9298c95fd011c9ec7fd70'
 login_manager=LoginManager()
 login_manager.init_app(app)
 client = docker.from_env()

@@ -10,7 +10,7 @@ class Logger:
     def createFile(self):
         if not os.path.exists(self.fileName):
             with open(self.fileName, 'w') as f:
-                pass
+                f.write(f"[{time.strftime('%d/%m/%Y %H:%M:%S')}] [INFO] Log file created")
 
     def addLog(self,message):
         with open(self.fileName, 'a') as f:
