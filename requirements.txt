@@ -4,5 +4,6 @@ Flask-WTF
 WTForms
 wtforms-validators
 argparse
+mcstatus
 docker
 threaded
