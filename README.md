@@ -48,9 +48,13 @@ To start a server, you must go to the `/server/<id>` page. You will then have to
 
 To stop a server, you must go to the `/server/<id>` page. You will then have to click on the `Stop` button.
 
-### See the logs of a server
+### See the logs the web server
 
-To see the logs of a server, you must go to the `/server/<id>` page. You will then have to click on the `Logs` button.
+To see the logs of a server, you must go on your server in the `/srv/hathermos_data/` directory. You will then have to open the `logs.log` file.
+
+### Modify the database 
+
+To modify the database, you must go on your server in the `/srv/hathermos_data/` directory. You will then have to open the `hathermos.db` file. (with sqlite3)
 
 ## Contributing
 
