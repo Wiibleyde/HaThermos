@@ -2,12 +2,23 @@ import sqlite3
 import hashlib
 
 class DatabaseService:
-    # server is database
+    """
+    This class is used to manage the database
+    """
     def __init__(self, fileName):
+        """
+        Constructor of the class
+
+        Args:
+            fileName (str): Name of the database file
+        """
         self.fileName = "data/"+fileName
         self.createDatabase()
 
     def createDatabase(self):
+        """
+        This method is used to create the database
+        """
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
         c.execute('CREATE TABLE IF NOT EXISTS servers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, owner TEXT, serverVersion TEXT, serverPort INTEGER)')
@@ -16,6 +27,17 @@ class DatabaseService:
         conn.close()
 
     def addServer(self, name, owner, serverVersion):
+        """
+        This method is used to add a new server to the database
+
+        Args:
+            name (str): The name of the server
+            owner (str): The owner of the server
+            serverVersion (str): The version of the server
+
+        Returns:
+            bool: True if the server has been added, False if not
+        """
         if self.testIfExist(name,owner):
             return False
         conn = sqlite3.connect(self.fileName)
@@ -26,6 +48,15 @@ class DatabaseService:
         return True
 
     def deleteServer(self, id):
+        """
+        This method is used to delete a server from the database
+
+        Args:
+            id (int): The id of the server
+
+        Returns:
+            bool: True if the server has been deleted, False if not
+        """
         try:
             conn = sqlite3.connect(self.fileName)
             c = conn.cursor()
@@ -37,6 +68,20 @@ class DatabaseService:
             return False
 
     def modifyServer(self, id, name, owner, serverVersion, serverPort, serverPath):
+        """
+        This method is used to modify a server from the database
+
+        Args:
+            id (int): The id of the server
+            name (str): The name of the server
+            owner (str): The owner of the server
+            serverVersion (str): The version of the server
+            serverPort (int): The port of the server
+            serverPath (str): The path of the server
+
+        Returns:
+            bool: True if the server has been modified, False if not
+        """
         try:
             conn = sqlite3.connect(self.fileName)
             c = conn.cursor()
@@ -48,6 +93,15 @@ class DatabaseService:
             return False
 
     def getServers(self):
+        """
+        This method is used to get all the servers from the database
+
+        Args:
+            id (int): The id of the server
+
+        Returns:
+            list: A list of servers
+        """
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
         c.execute('SELECT * FROM servers')
@@ -56,6 +110,15 @@ class DatabaseService:
         return servers
     
     def getServer(self, id):
+        """
+        This method is used to get a server from the database
+
+        Args:
+            id (int): The id of the server
+
+        Returns:
+            list: A list of servers
+        """
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
         c.execute('SELECT * FROM servers WHERE id = ?', (id,))
@@ -64,6 +127,15 @@ class DatabaseService:
         return server
     
     def getServerByName(self, name):
+        """
+        This method is used to get a server from the database
+
+        Args:
+            name (str): The name of the server
+
+        Returns:
+            list: A list of servers
+        """
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
         c.execute('SELECT * FROM servers WHERE name = ?', (name,))
@@ -72,6 +144,15 @@ class DatabaseService:
         return server
     
     def getServerByOwner(self, owner):
+        """
+        This method is used to get a server from the database
+
+        Args:
+            owner (str): The owner of the server
+
+        Returns:
+            list: A list of servers
+        """
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
         c.execute('SELECT * FROM servers WHERE owner = ?', (owner,))
@@ -80,6 +161,15 @@ class DatabaseService:
         return server
     
     def getServerByVersion(self, version):
+        """
+        This method is used to get a server from the database
+
+        Args:
+            version (str): The version of the server
+
+        Returns:
+            list: A list of servers
+        """
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
         c.execute('SELECT * FROM servers WHERE serverVersion = ?', (version,))
@@ -88,6 +178,16 @@ class DatabaseService:
         return server
     
     def testIfExist(self, name, owner):
+        """
+        This method is used to test if a server exist in the database
+
+        Args:
+            name (str): The name of the server
+            owner (str): The owner of the server
+
+        Returns:
+            bool: True if the server exist, False if not
+        """
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
         c.execute('SELECT * FROM servers WHERE name = ? AND owner = ?', (name, owner))
@@ -99,6 +199,17 @@ class DatabaseService:
             return False
         
     def addAdmin(self, username, email, password):
+        """
+        This method is used to add a new admin to the database
+
+        Args:
+            username (str): The username of the admin
+            email (str): The email of the admin
+            password (str): The password of the admin
+
+        Returns:
+            bool: True if the admin has been added, False if not
+        """
         if self.testIfUserExist(username):
             return False
         hashPassword = hashlib.sha256(password.encode()).hexdigest()
@@ -110,6 +221,15 @@ class DatabaseService:
         return True
     
     def isAdmin(self, username):
+        """
+        This method is used to test if a user is admin
+
+        Args:
+            username (str): The username of the user
+
+        Returns:
+            bool: True if the user is admin, False if not
+        """
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
         c.execute('SELECT * FROM users WHERE username = ? AND admin = ?', (username, True))
@@ -121,6 +241,15 @@ class DatabaseService:
             return False
         
     def setAdmin(self, username):
+        """
+        This method is used to set a user as admin
+
+        Args:
+            username (str): The username of the user
+
+        Returns:
+            bool: True if the user has been set as admin, False if not
+        """
         try:
             conn = sqlite3.connect(self.fileName)
             c = conn.cursor()
@@ -132,6 +261,15 @@ class DatabaseService:
             return False
     
     def unsetAdmin(self, username):
+        """
+        This method is used to unset a user as admin
+
+        Args:
+            username (str): The username of the user
+
+        Returns:
+            bool: True if the user has been unset as admin, False if not
+        """
         try:
             conn = sqlite3.connect(self.fileName)
             c = conn.cursor()
@@ -143,6 +281,17 @@ class DatabaseService:
             return False
 
     def addUser(self, username, email, password):
+        """
+        This method is used to add a new user to the database
+
+        Args:
+            username (str): The username of the user
+            email (str): The email of the user
+            password (str): The password of the user
+
+        Returns:
+            bool: True if the user has been added, False if not
+        """
         if self.testIfUserExist(username):
             return False
         hashPassword = hashlib.sha256(password.encode()).hexdigest()
@@ -154,6 +303,15 @@ class DatabaseService:
         return True
     
     def deleteUser(self, id):
+        """
+        This method is used to delete a user from the database
+
+        Args:
+            id (int): The id of the user
+
+        Returns:
+            bool: True if the user has been deleted, False if not
+        """
         try:
             conn = sqlite3.connect(self.fileName)
             c = conn.cursor()
@@ -165,6 +323,19 @@ class DatabaseService:
             return False
         
     def modifyUser(self, id, username, email, password, admin):
+        """
+        This method is used to modify a user from the database
+
+        Args:
+            id (int): The id of the user
+            username (str): The username of the user
+            email (str): The email of the user
+            password (str): The password of the user
+            admin (bool): True if the user is admin, False if not
+
+        Returns:
+            bool: True if the user has been modified, False if not
+        """
         try:
             conn = sqlite3.connect(self.fileName)
             c = conn.cursor()
@@ -176,6 +347,12 @@ class DatabaseService:
             return False
         
     def getUsers(self):
+        """
+        This method is used to get all users from the database
+
+        Returns:
+            list: A list of all users
+        """
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
         c.execute('SELECT * FROM users')
@@ -184,6 +361,15 @@ class DatabaseService:
         return users
     
     def getUser(self, id):
+        """
+        This method is used to get a user from the database
+
+        Args:
+            id (int): The id of the user
+
+        Returns:
+            tuple: A tuple containing the user
+        """
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
         c.execute('SELECT * FROM users WHERE id = ?', (id,))
@@ -192,6 +378,15 @@ class DatabaseService:
         return user
     
     def getUserByName(self, username):
+        """
+        This method is used to get a user from the database
+
+        Args:
+            username (str): The username of the user
+
+        Returns:
+            tuple: A tuple containing the user
+        """
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
         c.execute('SELECT * FROM users WHERE username = ?', (username,))
@@ -200,6 +395,15 @@ class DatabaseService:
         return user
     
     def getUserByEmail(self, email):
+        """
+        This method is used to get a user from the database
+
+        Args:
+            email (str): The email of the user
+
+        Returns:
+            tuple: A tuple containing the user
+        """
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
         c.execute('SELECT * FROM users WHERE email = ?', (email,))
@@ -208,6 +412,15 @@ class DatabaseService:
         return user
     
     def testIfUserExist(self, username):
+        """
+        This method is used to test if a user exist in the database
+
+        Args:
+            username (str): The username of the user
+
+        Returns:
+            bool: True if the user exist, False if not
+        """
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
         c.execute('SELECT * FROM users WHERE username = ?', (username,))
@@ -219,6 +432,15 @@ class DatabaseService:
             return False
         
     def testIfUserExistByEmail(self, email):
+        """
+        This method is used to test if a user exist in the database
+
+        Args:
+            email (str): The email of the user
+
+        Returns:
+            bool: True if the user exist, False if not
+        """
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
         c.execute('SELECT * FROM users WHERE email = ?', (email,))
@@ -230,6 +452,16 @@ class DatabaseService:
             return False
         
     def checkUser(self, data, password):
+        """
+        This method is used to check if a user exist in the database and if the password is correct
+
+        Args:
+            data (str): The username or email of the user
+            password (str): The password of the user
+
+        Returns:
+            bool: True if the user exist and the password is correct, False if not
+        """
         if self.testIfUserExist(data):
             user = self.getUserByName(data)
         elif self.testIfUserExistByEmail(data):
@@ -242,6 +474,16 @@ class DatabaseService:
             return False
 
     def updateServerPort(self, id, port):
+        """
+        This method is used to update the port of a server
+
+        Args:
+            id (int): The id of the server
+            port (int): The port of the server
+
+        Returns:
+            bool: True if the port has been updated, False if not
+        """
         try:
             conn = sqlite3.connect(self.fileName)
             c = conn.cursor()
@@ -253,6 +495,15 @@ class DatabaseService:
             return False
         
     def getUserServers(self, username):
+        """
+        This method is used to get all servers of a user
+
+        Args:
+            username (str): The username of the user
+
+        Returns:
+            list: A list of all servers of the user
+        """
         conn = sqlite3.connect(self.fileName)
         c = conn.cursor()
         c.execute('SELECT * FROM servers WHERE owner = ?', (username,))
@@ -261,6 +512,15 @@ class DatabaseService:
         return servers
     
     def isUserServerHasPort(self, username):
+        """
+        This method is used to test if a user has a server with a port
+
+        Args:
+            username (str): The username of the user
+
+        Returns:
+            bool: True if the user has a server with a port, False if not
+        """
         servers = self.getUserServers(username)
         for server in servers:
             if server[4] != None:
