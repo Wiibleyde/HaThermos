@@ -64,7 +64,7 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 -   **Wiibleyde** - _Initial work_ - [Wiibleyde](https://github.com/wiibleyde)
 -   **Aternos** - _Inspiration_ - [Aternos](https://aternos.org/)
--   **itzg** - _Minecraft server_ - [itzg](https://github.com/itzg/docker-minecraft-server)
+-   **itzg** - _Docker Minecraft server_ - [itzg](https://github.com/itzg/docker-minecraft-server)
 
 ## License
 
