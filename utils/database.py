@@ -527,3 +527,17 @@ class DatabaseService:
                 return True
         return False
     
+    def getServerWithPorts(self):
+        """
+        This method is used to get all servers with a port
+
+        Returns:
+            list: A list of all servers with a port
+        """
+        conn = sqlite3.connect(self.fileName)
+        c = conn.cursor()
+        c.execute('SELECT * FROM servers WHERE serverPort IS NOT NULL')
+        servers = c.fetchall()
+        conn.close()
+        return servers
+    
