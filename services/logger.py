@@ -3,7 +3,7 @@ import time
 
 class Logger:
     def __init__(self,fileName:str,debugMode:bool):
-        self.fileName = fileName
+        self.fileName = "data/"+fileName
         self.debugMode = debugMode
         self.createFile()
 

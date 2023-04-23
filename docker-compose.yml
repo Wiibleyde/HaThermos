@@ -1,7 +1,8 @@
-version: "0.8"
+version: '3.7'
 
 services:
   hathermos:
+    build: .
     image: wiibleyde/hathermos:latest
     container_name: hathermos
     restart: always
@@ -9,8 +10,11 @@ services:
       - "8090:8090"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      # database.db, ports.json, logs.log, serversConfig.json are stored in /srv/hathermos_data but in the container they are stored in /app
+      - /srv/hathermos_data:/app/data
     networks:
-      toto:
+      - net
 
 networks:
-  toto:
+  net:
+    driver: bridge

@@ -2,7 +2,7 @@ import json
 
 class PortsService:
     def __init__(self, filename):
-        self.filename = filename
+        self.filename = "data/"+filename
         self.possiblePorts = [25566,25567,25568,25569]
         self.usedPorts = []
         self.loadPorts()

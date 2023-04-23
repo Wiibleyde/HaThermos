@@ -4,7 +4,7 @@ import hashlib
 class DatabaseService:
     # server is database
     def __init__(self, fileName):
-        self.fileName = fileName
+        self.fileName = "data/"+fileName
         self.createDatabase()
 
     def createDatabase(self):

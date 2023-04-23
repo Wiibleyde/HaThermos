@@ -75,9 +75,9 @@ def startDocker(version, id, port):
     logger.addDebug(f"Starting docker {id}...")
     try:
         if version == '1.8.8' or version =='1.9.4' or version == '1.10.2' or version == '1.11.2' or version == '1.12.2' or version == '1.13.2' or version == '1.14.4' or version == '1.15.2' or version == '1.16.5' or version == '1.17.1':
-            client.containers.run(image=f"itzg/minecraft-server:java8-graalvm-ce", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server","SPIGET_RESSOURCES=#327","ENABLE_COMMAND_BLOCK=true","ENABLE_QUERY=true","MAX_PLAYERS=15","ENABLE_WHITELIST=true","ICON=https://hathermos.bonnell.fr/static/assets/HaThermos.png","OVERRIDE_ICON=true"], name=f"{id}hathermos", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
+            client.containers.run(image=f"itzg/minecraft-server:java8-graalvm-ce", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server","SPIGET_RESSOURCES=#327","ENABLE_COMMAND_BLOCK=true","ENABLE_QUERY=true","MAX_PLAYERS=15","ENABLE_WHITELIST=true","ICON=https://hathermos.bonnell.fr/static/assets/HaThermos.png","OVERRIDE_ICON=true"], name=f"{id}hathermos", network="hathermos_net", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
         else:
-            client.containers.run(image=f"itzg/minecraft-server:java17-graalvm-ce", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server","SPIGET_RESSOURCES=#327","ENABLE_COMMAND_BLOCK=true","ENABLE_QUERY=true","MAX_PLAYERS=15","ENABLE_WHITELIST=true","ICON=https://hathermos.bonnell.fr/static/assets/HaThermos.png","OVERRIDE_ICON=true"], name=f"{id}hathermos", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
+            client.containers.run(image=f"itzg/minecraft-server:java17-graalvm-ce", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server","SPIGET_RESSOURCES=#327","ENABLE_COMMAND_BLOCK=true","ENABLE_QUERY=true","MAX_PLAYERS=15","ENABLE_WHITELIST=true","ICON=https://hathermos.bonnell.fr/static/assets/HaThermos.png","OVERRIDE_ICON=true"], name=f"{id}hathermos", network="hathermos_net", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
         logger.addDebug(f"Starting docker {id}... Done")
         return True
     except Exception as e:
@@ -547,7 +547,7 @@ def stopServer(id):
 
 @app.route('/api/server/<id>')
 def apiServer(id):
-    mcServer = MinecraftService('127.0.0.1', databaseObj.getServer(id)[4])
+    mcServer = MinecraftService(f"{id}hathermos", 25565)
     status = mcServer.status
     if status == False:
         return jsonify({"status": "offline"})
