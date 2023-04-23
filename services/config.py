@@ -4,7 +4,7 @@ import os
 class ConfigService:
     """
     This class is used to manage the config file
-    """    
+    """
     def __init__(self):
         """
         Constructor of the class
