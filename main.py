@@ -316,7 +316,7 @@ def deleteServerAdmin(id):
                 flash('Server deleted', category='success')
                 return redirect(url_for('adminServers'))
             else:
-                DockerService.stopDocker(id)
+                DockerService().stopDocker(id)
                 if databaseObj.deleteServer(id):
                     flash('Server deleted', category='success')
                     return redirect(url_for('adminServers'))
@@ -360,14 +360,14 @@ def server(id):
     op = OpPlayerForm()
     whitelist = WhitelistPlayerForm()
     if op.validate_on_submit():
-        if DockerService.opPlayer(server[0], op.player1.data):
+        if DockerService().opPlayer(server[0], op.player1.data):
             flash('Player added as op', category='success')
             return redirect(url_for('server', id=id))
         else:
             flash('Player already op', category='error')
             return redirect(url_for('server', id=id))
     if whitelist.validate_on_submit():
-        if DockerService.addPlayerToWhitelist(server[0], whitelist.player2.data):
+        if DockerService().addPlayerToWhitelist(server[0], whitelist.player2.data):
             flash('Player added to whitelist', category='success')
             return redirect(url_for('server', id=id))
         else:
@@ -435,7 +435,7 @@ def startServer(id):
     if portToOpen == None:
         flash('No ports available, try again later', category='error')
         return redirect(url_for('dashboard'))
-    if DockerService.startDocker(id=serverId,port=portToOpen,version=databaseObj.getServer(id)[3]):
+    if DockerService().startDocker(id=serverId,port=portToOpen,version=databaseObj.getServer(id)[3]):
         ports.addPort(portToOpen)
         databaseObj.updateServerPort(serverId, portToOpen)
         flash('Server started', category='success')
@@ -457,7 +457,7 @@ def stopServer(id):
     if databaseObj.getServer(id)[2] != current_user.username:
         flash('You can only stop your own servers', category='error')
         return redirect(url_for('dashboard'))
-    if DockerService.stopDocker(id=serverId):
+    if DockerService().stopDocker(id=serverId):
         ports.removePort(databaseObj.getServer(id)[4])
         databaseObj.updateServerPort(serverId, None)
         flash('Server stopped', category='success')
