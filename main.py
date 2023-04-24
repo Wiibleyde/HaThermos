@@ -6,6 +6,7 @@ import logging
 import argparse
 import docker
 import requests
+import os
 
 # file import  
 from utils.database import DatabaseService
@@ -14,11 +15,12 @@ from services.config import ConfigService
 from services.logger import Logger
 from utils.ports import PortsService
 from utils.minecraft import MinecraftService
+from services.docker import DockerService
 
 # ==============================================================================
 # Environment variables 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '10fba9806ecc78b383c2bc6345b6145794a35acac9c9298c95fd011c9ec7fd70'
+app.config['SECRET_KEY'] = os.urandom(24)
 login_manager=LoginManager()
 login_manager.init_app(app)
 client = docker.from_env()
@@ -69,87 +71,6 @@ def checkMinecraftUsername(username):
             return False
     else:
         logger.addError(f'Error while checking username : {response.status_code}')
-        return False
-    
-def startDocker(version, id, port):
-    logger.addDebug(f"Starting docker {id}...")
-    try:
-        if version == '1.8.8' or version =='1.9.4' or version == '1.10.2' or version == '1.11.2' or version == '1.12.2' or version == '1.13.2' or version == '1.14.4' or version == '1.15.2' or version == '1.16.5' or version == '1.17.1':
-            client.containers.run(image=f"itzg/minecraft-server:java8-graalvm-ce", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server","SPIGET_RESSOURCES=#327","ENABLE_COMMAND_BLOCK=true","ENABLE_QUERY=true","MAX_PLAYERS=15","ENABLE_WHITELIST=true","ICON=https://hathermos.bonnell.fr/static/assets/HaThermos.png","OVERRIDE_ICON=true"], name=f"{id}hathermos", network="hathermos_net", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
-        else:
-            client.containers.run(image=f"itzg/minecraft-server:java17-graalvm-ce", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server","SPIGET_RESSOURCES=#327","ENABLE_COMMAND_BLOCK=true","ENABLE_QUERY=true","MAX_PLAYERS=15","ENABLE_WHITELIST=true","ICON=https://hathermos.bonnell.fr/static/assets/HaThermos.png","OVERRIDE_ICON=true"], name=f"{id}hathermos", network="hathermos_net", volumes={f"/srv/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
-        logger.addDebug(f"Starting docker {id}... Done")
-        return True
-    except Exception as e:
-        logger.addError(f"Error starting docker {id}: {e}")
-        return False
-    
-def opPlayer(id,playerName):
-    logger.addDebug(f"Op player {playerName} in docker {id}...")
-    try:
-        container = client.containers.get(f"{id}hathermos")
-        container.exec_run(f"mc-send-to-console \"op {playerName}\"")
-        logger.addDebug(f"Op player {playerName} in docker {id}... Done")
-        return True
-    except Exception as e:
-        logger.addError(f"Error op player {playerName} in docker {id}: {e}")
-        return False
-    
-def deopPlayer(id,playerName):
-    logger.addDebug(f"Deop player {playerName} in docker {id}...")
-    try:
-        container = client.containers.get(f"{id}hathermos")
-        container.exec_run(f"mc-send-to-console \"deop {playerName}\"")
-        logger.addDebug(f"Deop player {playerName} in docker {id}... Done")
-        return True
-    except Exception as e:
-        logger.addError(f"Error deop player {playerName} in docker {id}: {e}")
-        return False
-    
-def addPlayerToWhitelist(id,playerName):
-    logger.addDebug(f"Add player {playerName} to whitelist in docker {id}...")
-    try:
-        container = client.containers.get(f"{id}hathermos")
-        container.exec_run(f"mc-send-to-console \"whitelist add {playerName}\"")
-        logger.addDebug(f"Add player {playerName} to whitelist in docker {id}... Done")
-        return True
-    except Exception as e:
-        logger.addError(f"Error add player {playerName} to whitelist in docker {id}: {e}")
-        return False
-
-def removePlayerFromWhitelist(id,playerName):
-    logger.addDebug(f"Remove player {playerName} from whitelist in docker {id}...")
-    try:
-        container = client.containers.get(f"{id}hathermos")
-        container.exec_run(f"mc-send-to-console \"whitelist remove {playerName}\"")
-        logger.addDebug(f"Remove player {playerName} from whitelist in docker {id}... Done")
-        return True
-    except Exception as e:
-        logger.addError(f"Error remove player {playerName} from whitelist in docker {id}: {e}")
-        return False
-    
-def enableWhitelist(id):
-    logger.addDebug(f"Enable whitelist in docker {id}...")
-    try:
-        container = client.containers.get(f"{id}hathermos")
-        container.exec_run(f"mc-send-to-console \"whitelist on\"")
-        logger.addDebug(f"Enable whitelist in docker {id}... Done")
-        return True
-    except Exception as e:
-        logger.addError(f"Error enable whitelist in docker {id}: {e}")
-        return False
-
-def stopDocker(id):
-    logger.addDebug(f"Stopping docker {id}...")
-    try:
-        container = client.containers.get(f"{id}hathermos")
-        # remove stop and remove container
-        container.stop()
-        container.remove()
-        logger.addDebug(f"Stopping docker {id}... Done")
-        return True
-    except Exception as e:
-        logger.addError(f"Error stopping docker {id}: {e}")
         return False
 
 def createApp():
@@ -395,7 +316,7 @@ def deleteServerAdmin(id):
                 flash('Server deleted', category='success')
                 return redirect(url_for('adminServers'))
             else:
-                stopDocker(id)
+                DockerService.stopDocker(id)
                 if databaseObj.deleteServer(id):
                     flash('Server deleted', category='success')
                     return redirect(url_for('adminServers'))
@@ -439,14 +360,14 @@ def server(id):
     op = OpPlayerForm()
     whitelist = WhitelistPlayerForm()
     if op.validate_on_submit():
-        if opPlayer(server[0], op.player1.data):
+        if DockerService.opPlayer(server[0], op.player1.data):
             flash('Player added as op', category='success')
             return redirect(url_for('server', id=id))
         else:
             flash('Player already op', category='error')
             return redirect(url_for('server', id=id))
     if whitelist.validate_on_submit():
-        if addPlayerToWhitelist(server[0], whitelist.player2.data):
+        if DockerService.addPlayerToWhitelist(server[0], whitelist.player2.data):
             flash('Player added to whitelist', category='success')
             return redirect(url_for('server', id=id))
         else:
@@ -514,7 +435,7 @@ def startServer(id):
     if portToOpen == None:
         flash('No ports available, try again later', category='error')
         return redirect(url_for('dashboard'))
-    if startDocker(id=serverId,port=portToOpen,version=databaseObj.getServer(id)[3]):
+    if DockerService.startDocker(id=serverId,port=portToOpen,version=databaseObj.getServer(id)[3]):
         ports.addPort(portToOpen)
         databaseObj.updateServerPort(serverId, portToOpen)
         flash('Server started', category='success')
@@ -536,7 +457,7 @@ def stopServer(id):
     if databaseObj.getServer(id)[2] != current_user.username:
         flash('You can only stop your own servers', category='error')
         return redirect(url_for('dashboard'))
-    if stopDocker(id=serverId):
+    if DockerService.stopDocker(id=serverId):
         ports.removePort(databaseObj.getServer(id)[4])
         databaseObj.updateServerPort(serverId, None)
         flash('Server stopped', category='success')
