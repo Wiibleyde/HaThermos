@@ -240,40 +240,31 @@ class DatabaseService:
         else:
             return False
         
-    def setAdmin(self, username):
+    def setAdmin(self, id):
         """
         This method is used to set a user as admin
-
+        
         Args:
-            username (str): The username of the user
-
+            id (int): The id of the user
+            
         Returns:
             bool: True if the user has been set as admin, False if not
         """
         try:
             conn = sqlite3.connect(self.fileName)
             c = conn.cursor()
-            c.execute('UPDATE users SET admin = ? WHERE username = ?', (True, username))
+            c.execute('UPDATE users SET admin = ? WHERE id = ?', (True, id))
             conn.commit()
             conn.close()
             return True
         except:
             return False
     
-    def unsetAdmin(self, username):
-        """
-        This method is used to unset a user as admin
-
-        Args:
-            username (str): The username of the user
-
-        Returns:
-            bool: True if the user has been unset as admin, False if not
-        """
+    def unsetAdmin(self, id):
         try:
             conn = sqlite3.connect(self.fileName)
             c = conn.cursor()
-            c.execute('UPDATE users SET admin = ? WHERE username = ?', (False, username))
+            c.execute('UPDATE users SET admin = ? WHERE id = ?', (False, id))
             conn.commit()
             conn.close()
             return True

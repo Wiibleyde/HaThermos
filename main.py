@@ -47,11 +47,10 @@ def buildCss():
 def parseArgs():
     parser = argparse.ArgumentParser(description="HaThermos Web Panel")
     parser.add_argument('-d','--debug', action='store_true', help='Enable debug mode')
+    parser.add_argument('-p','--port', type=int, help='Port to run the web panel on')
+    parser.add_argument('-a','--admin', action='store_true', help='Enable admin mode (username:admin, passsword:admin) BE CAREFUL !')
     args = parser.parse_args()
-    if args.debug:
-        return True
-    else:
-        return False
+    return args
     
 def checkMinecraftUsername(username):
     url = "https://api.minetools.eu/uuid/" + username
@@ -476,7 +475,9 @@ def apiServer(id):
         return jsonify({"status": "online", "players": mcServer.getPlayers(), "playerCount": mcServer.getPlayerCount(), "maxPlayers": mcServer.getMaxPlayers()})
 
 if __name__ == '__main__':
-    debugBool = parseArgs()
+    args = parseArgs()
+    debugBool = args.debug
+    port = args.port if args.port != None else 8090
     jsonConfig = ConfigService()
     flaskLog = logging.getLogger('werkzeug')
     flaskLog.disabled = True
@@ -485,9 +486,13 @@ if __name__ == '__main__':
     logger.addInfo("Starting program...")
     ports = PortsService("ports.json")
     databaseObj = DatabaseService("database.db")
+    if args.admin:
+        logger.addInfo("Creating admin user")
+        databaseObj.addAdmin("admin", None, "admin")
+        exit()
     logger.addInfo("Utils loaded")
     createApp()
     buildCss()
-    logger.addInfo("Web server started on port 8090")
+    logger.addInfo(f"Web server started on port {port}")
     app.register_error_handler(404, ErrorHandler)
-    app.run(port=8090, debug=False,host='0.0.0.0')
+    app.run(port=port, debug=False,host='0.0.0.0')
