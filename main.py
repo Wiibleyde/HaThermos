@@ -176,6 +176,21 @@ def register():
             return redirect(url_for('register'))
     return render_template('register.html', form=form, ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Register", PageNameLower="register", userAuth=userAuth)
 
+@app.route('/admin')
+@login_required
+def admin():
+    userAuth = False
+    if current_user.is_authenticated:
+        userAuth = True
+        logger.addInfo(f'User {current_user.username} is logged in and going to the admin accounts page')
+        if not databaseObj.isAdmin(current_user.username):
+            flash('You are not an admin', category='error')
+            return redirect(url_for('index'))
+    else:
+        logger.addInfo('User is not logged in and going to the admin accounts page')
+        return redirect(url_for('index'))
+    return render_template("admin.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Admin", PageNameLower="admin", userAuth=userAuth)
+    
 @app.route('/admin/accounts')
 @login_required
 def adminAccounts():
