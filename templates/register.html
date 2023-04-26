@@ -24,7 +24,7 @@
                         <div class="flex flex-col items-center justify-center text-black my-1">
                             {{ form.username }}
                         </div>
-                        <div id="usernameMessage" class="flex flex-col items-center justify-center my-1"></div>
+                        <!-- <div id="usernameMessage" class="flex flex-col items-center justify-center my-1"></div> -->
                         <div class="flex flex-col items-center justify-center text-black my-1">
                             {{ form.email }}
                         </div>
@@ -124,7 +124,7 @@
 
         document.getElementById("password").addEventListener("keyup",checkPasswordMatch)
         document.getElementById("confirmPassword").addEventListener("keyup",checkPasswordMatch)
-        document.getElementById("username").addEventListener("keyup",function() {checkMinecraftUsername(this.value)})
+        // document.getElementById("username").addEventListener("keyup",function() {checkMinecraftUsername(this.value)})
         document.getElementById("email").addEventListener("keyup",function() {checkEmail(this.value)})
     </script>
     <footer>

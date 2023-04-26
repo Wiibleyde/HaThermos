@@ -5,8 +5,8 @@ import subprocess
 import logging
 import argparse
 import docker
-import requests
 import os
+import re
 
 # file import  
 from utils.database import DatabaseService
@@ -39,11 +39,6 @@ def load_user(user_id):
 def unauthorized():
     return redirect(url_for('login'))
 
-def buildCss():
-    logger.addDebug("Building CSS : building")
-    subprocess.run(["./tailwindcss", "-i", "./static/css/input.css", "-o", "./static/css/tailwind.css"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    logger.addDebug("Building CSS : building... Done")
-
 def parseArgs():
     parser = argparse.ArgumentParser(description="HaThermos Web Panel")
     parser.add_argument('-d','--debug', action='store_true', help='Enable debug mode')
@@ -52,31 +47,22 @@ def parseArgs():
     args = parser.parse_args()
     return args
     
-def checkMinecraftUsername(username):
-    url = "https://api.minetools.eu/uuid/" + username
-    response = requests.get(url)
-    logger.addDebug(f'Checking username : {response.status_code}')
-    if response.status_code == 200:
-        logger.addDebug(f'Checking username : {response.json()}')
-        try:
-            if response.json()['id'] == "null":
-                logger.addDebug(f'Checking username : {username} not found')
-                return False
-            else:
-                logger.addDebug(f'Checking username : {username} found')
-                return True
-        except:
-            logger.addDebug(f'Checking username : {username} not found')
-            return False
-    else:
-        logger.addError(f'Error while checking username : {response.status_code}')
-        return False
+def checkEmail(email):
+    regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+    if(re.search(regex,email)):
+        return True
+    return False
 
 def createApp():
     logger.addDebug("Creating app...")
     app = Flask(__name__)
     logger.addDebug("Creating app... Done")
     return app
+
+def buildCss():
+    logger.addDebug("Building CSS : building")
+    subprocess.run(["./tailwindcss", "-i", "./static/css/input.css", "-o", "./static/css/tailwind.css"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    logger.addDebug("Building CSS : building... Done")
 
 def ErrorHandler(e):
     logger.addError(f'Error : {e}')
@@ -163,14 +149,15 @@ def register():
         logger.addInfo('User is not logged in and going to the register page')
     if form.validate_on_submit():
         if form.confirmPassword.data == form.password.data:
-            if not checkMinecraftUsername(form.username.data):
-                flash('Invalid username, please enter you Minecraft username', category='error')
-                return redirect(url_for('register'))
-            if databaseObj.addUser(form.username.data, form.email.data, form.password.data):
-                flash('Account created', category='success')
-                return redirect(url_for('login'))
+            if checkEmail(form.email.data):
+                if databaseObj.addUser(form.username.data, form.email.data, form.password.data):
+                    flash('Account created', category='success')
+                    return redirect(url_for('login'))
+                else:
+                    flash('Username already exists', category='error')
+                    return redirect(url_for('register'))
             else:
-                flash('Username already exists', category='error')
+                flash('Invalid email', category='error')
                 return redirect(url_for('register'))
         else:
             flash('Passwords do not match', category='error')
@@ -206,7 +193,6 @@ def adminAccounts():
         logger.addInfo('User is not logged in and going to the admin accounts page')
         return redirect(url_for('index'))
     accounts = databaseObj.getUsers()
-    logger.addDebug(accounts)
     return render_template("adminAccount.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Admin Accounts", PageNameLower="admin/accounts", userAuth=userAuth, Accounts=accounts)
 
 @app.route('/admin/servers')
@@ -223,7 +209,6 @@ def adminServers():
         logger.addInfo('User is not logged in and going to the admin servers page')
         return redirect(url_for('index'))
     servers = databaseObj.getServers()
-    logger.addDebug(servers)
     return render_template("adminServer.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Admin Servers", PageNameLower="admin/servers", userAuth=userAuth, Servers=servers)
 
 @app.route('/deleteAccount', methods=['GET', 'POST'])

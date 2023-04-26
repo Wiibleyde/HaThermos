@@ -14,19 +14,18 @@
     <body class="dark:bg-black dark:text-white">
         <div class="container mx-auto">
             <div class="flex flex-col items-center justify-center">
-                <h2 class="text-2xl font-bold">{{ PageName }}</h2>
-                <div>
+              <h2 class="text-2xl font-bold">{{ PageName }}</h2>
+              <div class="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {% for account in Accounts %}
-                        <div class="flex flex-col items-center justify-center">
-                            <h3 class="text-2xl font-bold">{{ account[1] }}</h3>
-                            <p class="text-xl font-bold">{{ account[0] }}</p>
-                            <p class="text-xl font-bold">{{ account[2] }}</p>
-                            <div>
-                                <a href="/deleteAccount/{{ account[0] }}">Supprimer le compte</a>
+                        <div class="bg-white shadow-md rounded-lg p-6 flex flex-col items-center justify-center dark:bg-gray-800">
+                            <h3 class="text-lg font-bold">{{ account[1] }}</h3>
+                            <p class="text-base font-bold">{{ account[2] }}</p>
+                            <div class="mt-4 flex justify-center items-center space-x-4">
+                                <a href="/deleteAccount/{{ account[0] }}" class="text-red-500 hover:text-red-600">Supprimer le compte</a>
                                 {% if account[4] == False %}
-                                    <a href="/setAdmin/{{ account[0] }}">Rendre administrateur</a>
+                                    <a href="/setAdmin/{{ account[0] }}" class="text-blue-500 hover:text-blue-600">Rendre administrateur</a>
                                 {% else %}
-                                    <a href="/unsetAdmin/{{ account[0] }}">Retirer les droits d'administrateur</a>
+                                    <a href="/unsetAdmin/{{ account[0] }}" class="text-blue-500 hover:text-blue-600">Retirer les droits d'administrateur</a>
                                 {% endif %}
                             </div>
                         </div>
