@@ -4,3 +4,4 @@ docker-compose.yml
 database.db
 *.log
 ports.json
+data/

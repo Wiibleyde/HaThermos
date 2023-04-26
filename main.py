@@ -95,12 +95,13 @@ def ErrorHandler(e):
 @app.route('/')
 def index():
     userAuth = False
+    admin = False
     if current_user.is_authenticated:
         userAuth = True
         logger.addInfo(f'User {current_user.username} is logged in and going to the home page')
     else:
         logger.addInfo('User is not logged in and going to the home page')
-    return render_template("index.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Home", PageNameLower="home", userAuth=userAuth)
+    return render_template("index.html", ProjectName=jsonConfig.getConfig('ProjectName'), PageName="Home", PageNameLower="home", userAuth=userAuth, admin=admin)
 
 @app.route('/about')
 def about():
