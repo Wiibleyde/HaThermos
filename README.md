@@ -1,4 +1,4 @@
-# HaThermos
+# HaThermos <img src="./static/assets/HaThermos.png" width="35"></img>
 
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/4af34b6cf53e414b92851d98d49566b1)](https://app.codacy.com/gh/Wiibleyde/HaThermos/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade) ![Release](https://img.shields.io/github/v/release/Wiibleyde/HaThermos) ![License](https://img.shields.io/github/license/Wiibleyde/HaThermos)
 
