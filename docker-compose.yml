@@ -10,7 +10,7 @@ services:
       - "8090:8090"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /srv/hathermos_data:/app/data
+      - /var/hathermos/hathermos-data:/app/data
     networks:
       - net
 
