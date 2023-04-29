@@ -18,43 +18,23 @@ Simply clone the repository and run the following command:
 docker-compose up -d
 ```
 
-## Usage
-
-### Create an account
-
-To create an account, you must go to the `/register` page. You will then have to enter your Minecraft username, your email address and your password.
-
-### Login to your account
-
-To login to your account, you must go to the `/login` page. You will then have to enter your email address and your password.
-
-### See your servers
-
-To see your servers, you must go to the `/dashboard` page.
-
-### Create a server
-
-To create a server, you must go to the `/createServer` page. You will then have to enter the name of your server and the version of Minecraft you want to use.
-
-### Delete a server
-
-To delete a server, you must go to the `/server/<id>` page. You will then have to click on the `Delete` button.
-
-### Start a server
-
-To start a server, you must go to the `/server/<id>` page. You will then have to click on the `Start` button.
-
-### Stop a server
-
-To stop a server, you must go to the `/server/<id>` page. You will then have to click on the `Stop` button.
+## Manage HaThermos
 
 ### See the logs the web server
 
-To see the logs of a server, you must go on your server in the `/srv/hathermos_data/` directory. You will then have to open the `logs.log` file.
+To see the logs of a server, you must go on your server in the `/var/hathermos/hathermos-data/` directory. You will then have to open the `logs.log` file.
 
 ### Modify the database 
 
-To modify the database, you must go on your server in the `/srv/hathermos_data/` directory. You will then have to open the `hathermos.db` file. (with sqlite3)
+To modify the database, you must go on your server in the `/var/hathermos/hathermos-data/` directory. You will then have to open the `database.db` file.
+
+### Get the minecraft servers data
+
+To get the minecraft servers data, you must go on your server in the `/var/hathermos/minecraft-data/` directory. You will see some folder named has the id of the server. In each folder, you will have the minecraft server data.
+
+### Get the backups of the minecraft servers and the HaThermos data
+
+To get the backups of the minecraft servers and the HaThermos data, you must go on your server in the `/var/hathermos/hathermos-backup/` directory. You will see some folder named has the date, the hour and the minute of the backup. In each folder, you will have the `minecraft` folder and the `data` folder. The `minecraft` folder contains the minecraft server data and the `data` folder contains the HaThermos data.
 
 ## Contributing
 
@@ -74,3 +54,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 -   [Aternos](https://aternos.org/)
 -   [itzg](https://github.com/itzg/docker-minecraft-server)
+
+<img src="./static/assets/HaThermos.png" width="500"></img>

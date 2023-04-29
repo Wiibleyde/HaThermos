@@ -25,9 +25,18 @@ def make_backup():
             tar.add(file)
     logger.info(f'Backup created: {output_file}')
 
+def delete_old_backups():
+    logger.info('Deleting old backups...')
+    files = glob.glob(os.path.join(BACKUP_DIR, '*.tar.gz'))
+    files.sort()
+    for file in files[:-5]:
+        logger.info(f'Deleting {file}...')
+        os.remove(file)
+
 if __name__ == '__main__':
     while True:
         try:
+            delete_old_backups()
             make_backup()
         except Exception as e:
             logger.exception('Backup failed', exc_info=e)
