@@ -28,7 +28,7 @@ class DockerService:
             else:
                 self.client.containers.run(image=f"itzg/minecraft-server:java17-graalvm-ce", detach=True, ports={25565: port}, environment=["EULA=TRUE", f"VERSION={version}","MEMORY=2G","TYPE=PAPER","MOTD=HaThermos Server","SPIGET_RESSOURCES=#327","ENABLE_COMMAND_BLOCK=true","ENABLE_QUERY=true","MAX_PLAYERS=15","ENABLE_WHITELIST=true","ICON=https://hathermos.bonnell.fr/static/assets/HaThermos.png","OVERRIDE_ICON=true"], name=f"{id}hathermos", network="hathermos_net", volumes={f"/var/hathermos/minecraft-data/{id}": {"bind": "/data", "mode": "rw"}})
             return True
-        except Exception as e:
+        except Exception:
             return False
         
     def opPlayer(self,id,playerName):
@@ -46,7 +46,7 @@ class DockerService:
             container = self.client.containers.get(f"{id}hathermos")
             container.exec_run(f"mc-send-to-console \"op {playerName}\"")
             return True
-        except Exception as e:
+        except Exception:
             return False
         
     def deopPlayer(self,id,playerName):
@@ -64,7 +64,7 @@ class DockerService:
             container = self.client.containers.get(f"{id}hathermos")
             container.exec_run(f"mc-send-to-console \"deop {playerName}\"")
             return True
-        except Exception as e:
+        except Exception:
             return False
         
     def addPlayerToWhitelist(self,id,playerName):
@@ -82,7 +82,7 @@ class DockerService:
             container = self.client.containers.get(f"{id}hathermos")
             container.exec_run(f"mc-send-to-console \"whitelist add {playerName}\"")
             return True
-        except Exception as e:
+        except Exception:
             return False
 
     def removePlayerFromWhitelist(self,id,playerName):
@@ -100,7 +100,7 @@ class DockerService:
             container = self.client.containers.get(f"{id}hathermos")
             container.exec_run(f"mc-send-to-console \"whitelist remove {playerName}\"")
             return True
-        except Exception as e:
+        except Exception:
             return False
         
     def enableWhitelist(self,id):
@@ -117,7 +117,7 @@ class DockerService:
             container = self.client.containers.get(f"{id}hathermos")
             container.exec_run(f"mc-send-to-console \"whitelist on\"")
             return True
-        except Exception as e:
+        except Exception:
             return False
 
     def stopDocker(self,id):
@@ -135,5 +135,5 @@ class DockerService:
             container.stop()
             container.remove()
             return True
-        except Exception as e:
+        except Exception:
             return False
