@@ -26,6 +26,8 @@ services:
       - /var/hathermos/minecraft-data:/app/minecraft
     environment:
       - TZ=Europe/Paris
+    networks:
+      - net
 
 networks:
   net:
