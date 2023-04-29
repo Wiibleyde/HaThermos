@@ -5,3 +5,4 @@ database.db
 *.log
 ports.json
 data/
+backup/

@@ -13,6 +13,22 @@ services:
       - /var/hathermos/hathermos-data:/app/data
     networks:
       - net
+    environment:
+      - TZ=Europe/Paris
+  hathermos-backup:
+    build: ./backup
+    image: wiibleyde/hathermos-backup:latest
+    container_name: hathermos-backup
+    restart: always
+    volumes:
+      - /var/hathermos/hathermos-data:/app/data
+      - /var/hathermos/hathermos-backup:/app/backup
+      - /var/hathermos/minecraft-data:/app/minecraft
+    environment:
+      - TZ=Europe/Paris
+      
+
+    
 
 networks:
   net:
