@@ -34,11 +34,8 @@ def delete_old_backups():
         os.remove(file)
 
 if __name__ == '__main__':
-    while True:
-        try:
-            delete_old_backups()
-            make_backup()
-        except Exception as e:
-            logger.exception('Backup failed', exc_info=e)
-        logger.info('Sleeping for 1 hour...')
-        time.sleep(3600)
+    try:
+        delete_old_backups()
+        make_backup()
+    except Exception as e:
+        logger.exception('Backup failed', exc_info=e)
