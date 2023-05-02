@@ -10,13 +10,15 @@ HaThermos is a simple parodies of the famous [Aternos](https://aternos.org/) web
 
 -   Create a Vanilla Minecraft server in a few clicks
 
-## Installation
+## Installation and start
 
 Simply clone the repository and run the following command:
 
 ```bash
 docker-compose up -d
 ```
+
+And that's it, you can now access the application at the following address: `http://localhost:8090/`
 
 ## Manage HaThermos
 
