@@ -483,6 +483,8 @@ if __name__ == '__main__':
     flaskLog = logging.getLogger('werkzeug')
     flaskLog.disabled = True
     flask.cli.show_server_banner = lambda *args: None
+    if os.path.isdir("data/") == False:
+        os.mkdir("data/")
     logger = Logger("logs.log",debugMode=debugBool)
     logger.addInfo("Starting program...")
     ports = PortsService("ports.json")
