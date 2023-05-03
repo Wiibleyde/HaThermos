@@ -55,7 +55,7 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 ## Author
 
--   **Wiibleyde, Gwuill, Sml_Dreams** - _Initial work_ - [Wiibleyde](https://github.com/wiibleyde)
+-   **Wiibleyde, Gwuill, Sml_Dreams** - _Initial work_ - [Wiibleyde](https://github.com/wiibleyde), [Gwuill](https://github.com/Gwuill33), [Sml_Dreams](https://github.com/SmlDreams)
 -   **Aternos** - _Inspiration_ - [Aternos](https://aternos.org/)
 -   **itzg** - _Docker Minecraft server_ - [itzg](https://github.com/itzg/docker-minecraft-server)
 
