@@ -38,7 +38,7 @@ To get the minecraft servers data, you must go on your server in the `/var/hathe
 
 To get the backups of the minecraft servers and the HaThermos data, you must go on your server in the `/var/hathermos/hathermos-backup/` directory. You will see some folder named has the date, the hour and the minute of the backup. In each folder, you will have the `minecraft` folder and the `data` folder. The `minecraft` folder contains the minecraft server data and the `data` folder contains the HaThermos data.
 
-#### **Backup to another server**
+#### **Send backup to another server**
 
 You can use the following script :
     
@@ -47,6 +47,27 @@ You can use the following script :
 
 latest=$(ls -t /var/hathermos/hathermos-backup | head -1)
 scp /var/hathermos/hathermos-backup/$latest {user}@{ip}:{path}
+```
+
+#### **Restore backup**
+
+To restore the latest backup, you can use this scrpt :
+```bash 
+#!/bin/bash
+cd /var/hathermos/hathermos-backup/
+latest=$(ls -t /var/hathermos/hathermos-backup | head -1)
+tar -xzf $latest.tar.gz
+cp -r hathermos-data /var/hathermos/hathermos-data
+cp -r minecraft-data /var/hathermos/minecraft-data
+```
+And to restore a specific backup :
+```bash
+#!/bin/bash
+
+cd /var/hathermos/hathermos-backup/
+tar -xzf {backup}.tar.gz
+cp -r hathermos-data /var/hathermos/hathermos-data
+cp -r minecraft-data /var/hathermos/minecraft-data
 ```
 
 ## Contributing
