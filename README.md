@@ -6,6 +6,11 @@
 
 HaThermos is a simple parodies of the famous [Aternos](https://aternos.org/) website. It is a web application that allows you to create a Minecraft server in a few clicks. It is a project that I started to learn the basics of web development. It is not intended to be used in production (but it is possible).
 
+In my deployment of HaThermos, I use the following technologies:
+
+-   [UptimeRobot](https://stats.uptimerobot.com/ykNNQINRVP) to monitor the server status
+-   [Netdata](https://maison.bonnell.fr/netdata/#after=-1020;before=0;;theme=slate;utc=Europe%2FParis) to monitor the server resources
+
 ## Features
 
 -   Create a Vanilla Minecraft server in a few clicks
